@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.9.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="create work days tabel" author="pko">
+        <createTable tableName="work_days">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="create_date" type="date">
+                <constraints nullable="false" />
+            </column>
+            <column name="status" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="create work logs table" author="pko">
+        <createTable tableName="work_logs">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="jira_id" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="jira_name" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="comment" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="started" type="datetime">
+                <constraints nullable="false" />
+            </column>
+            <column name="ended" type="datetime">
+                <constraints nullable="true" />
+            </column>
+            <column name="work_day_id" type="bigint">
+                <constraints nullable="true" />
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="work_logs" columnName="started" columnDataType="datetime"/>
+        <dropDefaultValue tableName="work_logs" columnName="ended" columnDataType="datetime"/>
+    </changeSet>
+
+    <changeSet id="connect work day with work logs" author="pko">
+
+        <addForeignKeyConstraint baseColumnNames="work_day_id"
+                                 baseTableName="work_logs"
+                                 constraintName="fk_work_log_work_day_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="work_days"/>
+
+    </changeSet>
+
+</databaseChangeLog>
