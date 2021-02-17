@@ -14,9 +14,6 @@
             <column name="create_date" type="date">
                 <constraints nullable="false" />
             </column>
-            <column name="status" type="varchar(255)">
-                <constraints nullable="true" />
-            </column>
         </createTable>
     </changeSet>
 
@@ -38,6 +35,9 @@
                 <constraints nullable="false" />
             </column>
             <column name="ended" type="datetime">
+                <constraints nullable="true" />
+            </column>
+            <column name="status" type="varchar(255)">
                 <constraints nullable="true" />
             </column>
             <column name="work_day_id" type="bigint">

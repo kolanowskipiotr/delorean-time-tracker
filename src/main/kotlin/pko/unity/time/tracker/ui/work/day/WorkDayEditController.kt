@@ -5,7 +5,6 @@ import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
 import pko.unity.time.tracker.application.WorkDayService
-import pko.unity.time.tracker.ui.kernel.FreemarkerController
 import pko.unity.time.tracker.ui.work.day.dto.WorkLogDto
 import java.time.LocalDate
 
@@ -13,7 +12,7 @@ import java.time.LocalDate
 @RequestMapping("/work-day")
 class WorkDayEditController(
     private val workDayService: WorkDayService
-): FreemarkerController() {
+) {
 
     @GetMapping("/edit")
     fun showWorkDay(
@@ -26,6 +25,7 @@ class WorkDayEditController(
         model.addAttribute("searchedJiraIssueId", searchedJiraIssueId)
         model.addAttribute("searchedJiraIssueName", searchedJiraIssueName)
         model.addAttribute("searchedJiraIssueComment",searchedJiraIssueComment)
+        model.addAttribute("workLogIdsInConflict" , workDayService.workLogInConflictIds(workDayId))
         return URL
     }
 

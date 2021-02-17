@@ -1,16 +1,22 @@
 package pko.unity.time.tracker.domain;
 
+import org.apache.commons.lang3.StringUtils;
 import pko.unity.time.tracker.ui.work.day.dto.WorkLogDto;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static pko.unity.time.tracker.domain.WorkDayStatus.IN_PROGRSS;
+import static java.util.Collections.emptySet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static pko.unity.time.tracker.domain.WorkDayStatus.*;
 
 /**
  * A WorkDay.
@@ -30,11 +36,7 @@ public class WorkDay implements Serializable {
     @Column(name = "create_date", nullable = false)
     private LocalDate createDate;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private WorkDayStatus status;
-
-    @OneToMany(cascade=CascadeType.ALL, orphanRemoval = true, mappedBy = "workDay")
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "workDay")
     private Set<WorkLog> workLogs = new HashSet<>();
 
     //Hibernate nied this
@@ -43,7 +45,6 @@ public class WorkDay implements Serializable {
 
     public WorkDay(LocalDate createDate) {
         this.createDate = createDate;
-        this.status = IN_PROGRSS;
     }
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
@@ -51,61 +52,135 @@ public class WorkDay implements Serializable {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
     public LocalDate getCreateDate() {
         return createDate;
-    }
-
-    public WorkDay createDate(LocalDate createDate) {
-        this.createDate = createDate;
-        return this;
-    }
-
-    public void setCreateDate(LocalDate createDate) {
-        this.createDate = createDate;
-    }
-
-    public WorkDayStatus getStatus() {
-        return status;
-    }
-
-    public WorkDay status(WorkDayStatus status) {
-        this.status = status;
-        return this;
-    }
-
-    public void setStatus(WorkDayStatus status) {
-        this.status = status;
     }
 
     public Set<WorkLog> getWorkLogs() {
         return workLogs;
     }
 
-    public WorkDay workLogs(Set<WorkLog> workLogs) {
-        this.workLogs = workLogs;
-        return this;
+
+    public void update(LocalDate date) {
+        this.createDate = date;
+        //TODO change day in all Instants in workDays
     }
 
-    public WorkDay addWorkLog(WorkLog workLog) {
-        this.workLogs.add(workLog);
-        workLog.setWorkDay(this);
-        return this;
+    public WorkDayStatus getStatus() {
+        if (this.workLogs.stream().allMatch(wl -> wl.getStatus() == STOPED)) {
+            return STOPED;
+        }
+        if (this.workLogs.stream().allMatch(wl -> wl.getStatus() == EXPORTED)) {
+            return EXPORTED;
+        }
+        return IN_PROGRSS;
     }
 
-    public WorkDay removeWorkLog(WorkLog workLog) {
-        this.workLogs.remove(workLog);
-        workLog.setWorkDay(null);
-        return this;
+    public void addWorkLog(WorkLogDto workLogDto) {
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
+        Instant started = isBlank(workLogDto.getStarted())
+                ? buildDateTimeInstant(this.createDate, now)
+                : buildDateTimeInstant(this.createDate, workLogDto.getStarted());
+        Instant ended = isBlank(workLogDto.getEnded())
+                ? buildDateTimeInstantEndOfDay(this.createDate)
+                : buildDateTimeInstant(this.createDate, workLogDto.getEnded());
+        if(started.isBefore(ended)) {
+            Long idToExclude = workLogDto.getId();
+
+            if(isBlank(workLogDto.getEnded())) {
+                endWorklogs(started);
+            }
+
+            //update
+            Set<Long> workLogInConflictIds = emptySet();
+            if (!isOverridingOtherWorklog(started, ended, idToExclude)) {
+                adjustNeighbourWorklogs(started, ended, idToExclude);
+            }
+            //update
+
+            this.workLogs.add(new WorkLog(
+                    this,
+                    started,
+                    isBlank(workLogDto.getEnded())
+                            ? null
+                            : buildDateTimeInstant(this.createDate, workLogDto.getEnded()),
+                    workLogDto.getJiraIssiueId(),
+                    workLogDto.getJiraIssiueName(),
+                    workLogDto.getJiraIssiueComment()));
+        }
     }
 
-    public void setWorkLogs(Set<WorkLog> workLogs) {
-        this.workLogs = workLogs;
+    public Set<Long> workLogInConflictIds(){
+        return this.workLogs.stream()
+                .map(it -> workLogInConflictIds(it.getStarted(), endedOrEndOfDay(it), it.getId()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
     }
-    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
+    private Set<Long> workLogInConflictIds(Instant started, Instant ended, Long idToExclude) {
+        return this.workLogs.stream()
+                .filter(it -> !it.getId().equals(idToExclude))
+                .filter(it -> started.isBefore(endedOrEndOfDay(it)) & ended.isAfter(it.getStarted()))
+                .map(WorkLog::getId)
+                .collect(Collectors.toSet());
+    }
+
+    private void adjustNeighbourWorklogs(Instant started, Instant ended, Long idToExclude) {
+        this.workLogs.stream()
+                .filter(it -> !it.getId().equals(idToExclude))
+                .filter(it -> started.isAfter(it.getStarted()) && started.isBefore(endedOrEndOfDay(it)))
+                .forEach(it -> it.setEnded(started));
+        this.workLogs.stream()
+                .filter(it -> !it.getId().equals(idToExclude))
+                .filter(it -> ended.isAfter(it.getStarted()) && ended.isBefore(endedOrEndOfDay(it)))
+                .forEach(it -> it.setStarted(ended));
+    }
+
+    private Instant endedOrEndOfDay(WorkLog workLog) {
+        return workLog.isEnded() ? workLog.getEnded() : buildDateTimeInstantEndOfDay(this.createDate);
+    }
+
+    private void endWorklogs(Instant ended) {
+        this.workLogs.stream()
+                .filter(WorkLog::isNotEnded)
+                .forEach(it -> it.end(ended));
+    }
+
+    private boolean isOverridingOtherWorklog(Instant started, Instant ended, Long idToExclude) {
+        return this.workLogs.stream()
+                .filter(it -> !it.getId().equals(idToExclude))
+                .anyMatch(it -> started.isBefore(it.getStarted()) && ended.isAfter(endedOrEndOfDay(it)));
+    }
+
+    private Instant buildDateTimeInstant(LocalDate date, Instant time) {
+        Instant started = date.atStartOfDay().atZone(ZoneId.systemDefault())
+                .withHour(time.atZone(ZoneId.systemDefault()).getHour())
+                .withMinute(time.atZone(ZoneId.systemDefault()).getMinute())
+                .toInstant();
+        return started;
+    }
+
+    private Instant buildDateTimeInstant(LocalDate date, String time) {
+        List<Integer> timeParts = Arrays.stream(time.trim().split(":")).
+                map(it -> Integer.parseInt(it))
+                .collect(Collectors.toList());
+        Instant started = date.atStartOfDay().atZone(ZoneId.systemDefault())
+                .withHour(timeParts.get(0))
+                .withMinute(timeParts.get(1))
+                .toInstant();
+        return started;
+    }
+
+    private Instant buildDateTimeInstantEndOfDay(LocalDate date) {
+        Instant started = date.atStartOfDay().atZone(ZoneId.systemDefault())
+                .withHour(23)
+                .withMinute(59)
+                .toInstant();
+        return started;
+    }
+
+    public void removeWorkLog(long workLogId) {
+        this.workLogs.removeIf(it -> it.getId() == workLogId);
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -129,19 +204,6 @@ public class WorkDay implements Serializable {
         return "WorkDay{" +
                 "id=" + getId() +
                 ", createDate='" + getCreateDate() + "'" +
-                ", status='" + getStatus() + "'" +
                 "}";
-    }
-
-    public void update(LocalDate date) {
-        this.createDate = date;
-    }
-
-    public void addWorkLog(WorkLogDto workLogDto) {
-        this.workLogs.add(new WorkLog(this, workLogDto));
-    }
-
-    public void removeWorkLog(long workLogId) {
-        this.workLogs.removeIf(it -> it.getId() == workLogId);
     }
 }

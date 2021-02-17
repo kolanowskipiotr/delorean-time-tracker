@@ -3,16 +3,10 @@ package pko.unity.time.tracker.ui.jira
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import pko.unity.time.tracker.application.WorkDayService
-import pko.unity.time.tracker.domain.WorkDayRepository
 import pko.unity.time.tracker.infrastructure.JiraRepository
-import pko.unity.time.tracker.ui.jira.dto.JiraCredentialsDto
-import pko.unity.time.tracker.ui.jira.dto.JiraIssueDto
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @Controller
 @RequestMapping("/jira/issue/search")

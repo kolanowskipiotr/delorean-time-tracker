@@ -33,12 +33,15 @@
                     <input type="text" class="form-control" id="jiraIssiueId" name="jiraIssiueId" placeholder="JIRA ID" value="${searchedJiraIssueId!?html}" required="required"/>
                     <input type="text" class="form-control" id="jiraIssiueName" name="jiraIssiueName" placeholder="JIRA Issue summary" value="${searchedJiraIssueName!?html}"/>
                     <input type="text" class="form-control" id="jiraIssiueComment" name="jiraIssiueComment" placeholder="Comment" value="${searchedJiraIssueComment!?html}"/>
+                    <input type="time" class="form-control" id="started" name="started" placeholder="Started at"/>
+                    <input type="time" class="form-control" id="ended" name="ended" placeholder="Ended at"/>
                 </div>
                 <button type="submit" class="btn btn-primary mb-2">Add work log</button>
             </form>
             <table class="table table-striped">
                 <thead class="thead-dark">
                 <tr>
+                    <th></th>
                     <th>#</th>
                     <th>Started</th>
                     <th>Ended</th>
@@ -46,20 +49,24 @@
                     <th>JIRA ID</th>
                     <th>JIRA Issue summary</th>
                     <th>Comment</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
                     <#if workDay.workLogs??>
                         <#list workDay.workLogs as workLog>
+
                             <tr>
+                                <td class="<#if workLogIdsInConflict?seq_contains(workLog.id) >bg-danger text-white<#elseif workLog.status == "EXPORTED">bg-success text-white <#elseif workLog.status == "IN_PROGRSS">bg-primary text-white</#if>" ></td>
                                 <td>${workLog_index +1}</td>
-                                <td>${timeFormat.getTimeString(workLog.started)}</td>
-                                <td>${timeFormat.getTimeString(workLog.ended)}</td>
+                                <td>${workLog.started!?html}</td>
+                                <td>${workLog.ended!?html}</td>
                                 <td>${workLog.took!} minutes</td>
                                 <td><a href="<#if jiraUrl??>${jiraUrl?html}/browse/${workLog.jiraIssiueId?html}</#if>" target="_blank">${workLog.jiraIssiueId?html}</a></td>
                                 <td>${workLog.jiraIssiueName!?html}</td>
                                 <td>${workLog.jiraIssiueComment!?html}</td>
+                                <td>${workLog.status!?html}</td>
                                 <td>
                                     <div class="btn-toolbar" role="toolbar">
                                         <div class="btn-group mr-2" role="group">

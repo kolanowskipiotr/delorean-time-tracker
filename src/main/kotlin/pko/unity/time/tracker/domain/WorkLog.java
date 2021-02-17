@@ -1,19 +1,19 @@
 package pko.unity.time.tracker.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import pko.unity.time.tracker.ui.work.day.dto.WorkLogDto;
+import com.google.common.annotations.VisibleForTesting;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
 
+import java.io.OptionalDataException;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalField;
-import java.time.temporal.TemporalUnit;
+import java.util.Optional;
+
+import static java.util.Optional.ofNullable;
+import static pko.unity.time.tracker.domain.WorkDayStatus.IN_PROGRSS;
+import static pko.unity.time.tracker.domain.WorkDayStatus.STOPED;
 
 /**
  * A WorkLog.
@@ -48,85 +48,53 @@ public class WorkLog implements Serializable {
     private Instant ended;
 
     @ManyToOne
-    @JsonIgnoreProperties(value = "workLogs", allowSetters = true)
     private WorkDay workDay;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private WorkDayStatus status;
 
     //Hibernate nied this
     public WorkLog() {
     }
 
-    public WorkLog(WorkDay workDay, WorkLogDto workLogDto) {
+    public WorkLog(WorkDay workDay, Instant started, Instant ended, String jiraIssueId, String jiraIssueName, String jiraIssueComment) {
         this.workDay = workDay;
-        this.jiraId = workLogDto.getJiraIssiueId();
-        this.jiraName = workLogDto.getJiraIssiueName();
-        this.comment = workLogDto.getJiraIssiueComment();
-        this.started = adjustInstant(Instant.now());
+        this.jiraId = jiraIssueId;
+        this.jiraName = jiraIssueName;
+        this.comment = jiraIssueComment;
+        this.start(started);
+        ofNullable(ended)
+                .ifPresent(this::end);
     }
 
-    private Instant adjustInstant(Instant instant){
-        return instant
-                .truncatedTo(ChronoUnit.MINUTES);
-    }
-
-    // jhipster-needle-entity-add-field - JHipster will add fields here
     public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    @VisibleForTesting
+    void setId(Long id) {
         this.id = id;
+    }
+
+    public WorkDayStatus getStatus() {
+        return status;
     }
 
     public String getJiraId() {
         return jiraId;
     }
 
-    public WorkLog jiraId(String jiraId) {
-        this.jiraId = jiraId;
-        return this;
-    }
-
-    public void setJiraId(String jiraId) {
-        this.jiraId = jiraId;
-    }
-
     public String getJiraName() {
         return jiraName;
-    }
-
-    public WorkLog jiraName(String jiraName) {
-        this.jiraName = jiraName;
-        return this;
-    }
-
-    public void setJiraName(String jiraName) {
-        this.jiraName = jiraName;
     }
 
     public String getComment() {
         return comment;
     }
 
-    public WorkLog comment(String comment) {
-        this.comment = comment;
-        return this;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
     public Instant getStarted() {
         return started;
-    }
-
-    public WorkLog start(Instant start) {
-        this.started = adjustInstant(start);
-        return this;
-    }
-
-    public void setStarted(Instant start) {
-        this.started = adjustInstant(start);
     }
 
     public Instant getEnded() {
@@ -138,28 +106,32 @@ public class WorkLog implements Serializable {
         return duration.toMinutes();
     }
 
-    public WorkLog end(Instant end) {
-        this.ended = adjustInstant(end);
-        return this;
+    public boolean isEnded() {
+        return this.ended!= null;
     }
 
-    public void setEnded(Instant end) {
-        this.ended = adjustInstant(end);
+    public boolean isNotEnded() {
+        return !isEnded();
     }
 
-    public WorkDay getWorkDay() {
-        return workDay;
+    public void end(Instant endAt) {
+        this.ended = endAt;
+        this.status = STOPED;
     }
 
-    public WorkLog workDay(WorkDay workDay) {
-        this.workDay = workDay;
-        return this;
+    void setEnded(Instant endAt) {
+        this.ended = endAt;
     }
 
-    public void setWorkDay(WorkDay workDay) {
-        this.workDay = workDay;
+    private void start(Instant startedAt) {
+        this.started = startedAt;
+        this.status = IN_PROGRSS;
     }
-    // jhipster-needle-entity-add-getters-setters - JHipster will add getters and setters here
+
+    void setStarted(Instant startedAt) {
+        this.started = startedAt;
+    }
+
 
     @Override
     public boolean equals(Object o) {
@@ -187,6 +159,7 @@ public class WorkLog implements Serializable {
                 ", comment='" + getComment() + "'" +
                 ", start='" + getStarted() + "'" +
                 ", end='" + getEnded() + "'" +
+                ", status='" + getStatus() + "'" +
                 "}";
     }
 }
