@@ -98,6 +98,13 @@ class WorkDayService @Autowired constructor(
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
+    @Transactional
+    fun stopWorklog(workDayId: Long) {
+        val workDay = workDayJpaRepository.getOne(workDayId)
+        workDay.stopTracking();
+        workDayJpaRepository.saveAndFlush(workDay)
+    }
+
     private fun timeString(instatnt: Instant?): String? {
         if(instatnt != null) {
             return TIME_FORMATTER.format(instatnt)

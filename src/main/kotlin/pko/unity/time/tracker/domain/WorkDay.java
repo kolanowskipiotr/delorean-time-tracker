@@ -76,6 +76,11 @@ public class WorkDay implements Serializable {
         return IN_PROGRSS;
     }
 
+    public void stopTracking() {
+        Instant now = buildDateTimeInstant(this.createDate, Instant.now().truncatedTo(ChronoUnit.MINUTES));
+        endWorklogs(now);
+    }
+
     public void addWorkLog(WorkLogDto workLogDto) {
         Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
         Instant started = isBlank(workLogDto.getStarted())

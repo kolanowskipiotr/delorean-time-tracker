@@ -8,7 +8,7 @@
     <h1>Jira credentials</h1>
     <nav class="navbar navbar-light bg-light justify-content-between" style="background-color: #e3f2fd;">
         <a class="navbar-brand">Navigation</a>
-        <a class="btn btn-outline-success" href="/work-day/list" role="button">Work days</a>
+        <a class="btn btn-outline-success" href="/work-day/list" role="button">📅 Work days</a>
     </nav>
 
     <div class="card">
@@ -33,7 +33,7 @@
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="submit" class="btn btn-primary">💾 Save</button>
             </form>
         </div>
     </div>

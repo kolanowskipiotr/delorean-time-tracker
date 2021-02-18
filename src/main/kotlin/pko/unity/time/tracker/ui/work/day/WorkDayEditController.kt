@@ -36,6 +36,12 @@ class WorkDayEditController(
         return "redirect:$URL?workDayId=$workDayId"
     }
 
+    @GetMapping("/stop")//FIXME: This should be Patch
+    fun stopWorkDay(@RequestParam(name = "workDayId") workDayId: Long): String {
+        workDayService.stopWorklog(workDayId)
+        return "redirect:$URL?workDayId=$workDayId"
+    }
+
     @PostMapping("/work-log")
     fun addWorkLog(@RequestParam(name = "workDayId") workDayId: Long,
                     workLog: WorkLogDto): String{
@@ -43,7 +49,7 @@ class WorkDayEditController(
         return "redirect:$URL?workDayId=$workDayId"
     }
 
-    @PostMapping("/delete-receiver")
+    @PostMapping("/work-log/delete")
     fun deleteReceiver(@RequestParam(name = "workDayId") workDayId: Long,
                        @RequestParam(name = "workLogId") workLogId: Long): String{
         workDayService.removeWorkLog(workDayId, workLogId)

@@ -8,7 +8,8 @@
     <h1>Jira search</h1>
     <nav class="navbar navbar-light bg-light justify-content-between" style="background-color: #e3f2fd;">
         <a class="navbar-brand">Navigation</a>
-        <a class="btn btn-outline-success" href="/work-day/edit?workDayId=${workDayId?c}" role="button">Work day</a>
+        <a class="btn btn-outline-success" href="/jira/credentials/edit" role="button">🔑 Jira credentials</a>
+        <a class="btn btn-outline-success" href="/work-day/edit?workDayId=${workDayId?c}" role="button">📅 Work day</a>
     </nav>
 
     <div class="card">
@@ -19,7 +20,7 @@
                     <input type="hidden" class="form-control" id="workDayId" name="workDayId" value="${workDayId?c}"/>
                     <input type="text" class="form-control" id="query" name="query" placeholder="Query" value="${query!}"/>
                 </div>
-                <button type="submit" class="btn btn-primary">Search</button>
+                <button type="submit" class="btn btn-primary">🔍 Search</button>
             </form>
         </div>
         <table class="table table-striped">
@@ -40,7 +41,7 @@
                         <td>
                             <div class="btn-toolbar" role="toolbar">
                                 <div class="btn-group mr-2" role="group">
-                                    <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDayId?c}&searchedJiraIssueId=${jiraIssue.jiraId}&searchedJiraIssueName=${jiraIssue.jiraName}&searchedJiraIssueComment=${jiraIssue.comment!}" role="button">Choose</a>
+                                    <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDayId?c}&searchedJiraIssueId=${jiraIssue.jiraId}&searchedJiraIssueName=${jiraIssue.jiraName}&searchedJiraIssueComment=${jiraIssue.comment!}" role="button">✔️ Choose</a>
                                 </div>
                             </div>
                         </td>
