@@ -86,6 +86,14 @@ class WorkDayEditController(
         workDayService.startWorkLog(workDayId, workLogId)
         return "redirect:$URL?workDayId=$workDayId"
     }
+    @GetMapping("/work-log/continue")
+    fun continueWorkLog(
+        @RequestParam(name = "workDayId") workDayId: Long,
+        @RequestParam(name = "workLogId") workLogId: Long
+    ): String {
+        workDayService.continueWorkLog(workDayId, workLogId)
+        return "redirect:$URL?workDayId=$workDayId"
+    }
 
     companion object {
         const val URL = "/work-day/edit"

@@ -3,18 +3,18 @@ package pko.unity.time.tracker.domain;
 import pko.unity.time.tracker.ui.work.day.dto.WorkLogDto;
 
 import javax.persistence.*;
-import javax.validation.constraints.*;
-
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Collections.emptySet;
+import static java.time.Instant.now;
+import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static pko.unity.time.tracker.domain.WorkDayStatus.*;
 
@@ -62,7 +62,7 @@ public class WorkDay implements Serializable {
         return workLogs;
     }
 
-    public Long getDuration(){
+    public Long getDuration() {
         return this.workLogs.stream()
                 .map(WorkLog::getDuration)
                 .reduce(0L, Long::sum);
@@ -84,23 +84,32 @@ public class WorkDay implements Serializable {
     }
 
     public void stopTracking() {
-        Instant now = buildDateTimeInstant(this.createDate, Instant.now().truncatedTo(ChronoUnit.MINUTES));
+        Instant now = buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES));
         endWorklogs(now);
     }
 
-    public void startTracking(long workLogId) {
-        Instant now = buildDateTimeInstant(this.createDate, Instant.now().truncatedTo(ChronoUnit.MINUTES));
+    public void continueTracking(long workLogId) {
         this.workLogs.stream()
+                .max(comparing(WorkLog::getStarted))
                 .filter(workLog -> workLog.getId().equals(workLogId))
-                .forEach(it -> addWorkLog(new WorkLogDto(
-                        null,
-                        it.getJiraId(),
-                        TIME_FORMATTER.format(now),
-                        null,
-                        null,
-                        it.getJiraName(),
-                        it.getComment(),
-                        null)));
+                .ifPresent(WorkLog::contiune);
+    }
+
+    public void startTracking(long workLogId) {
+        Instant now = buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES));
+        List<WorkLog> workLogsToCopy = this.workLogs.stream()
+                .filter(workLog -> workLog.getId().equals(workLogId))
+                .collect(Collectors.toList());
+        workLogsToCopy.forEach(it -> addWorkLog(
+                new WorkLogDto(
+                    null,
+                    it.getJiraId(),
+                    TIME_FORMATTER.format(now),
+                    null,
+                    null,
+                    it.getJiraName(),
+                    it.getComment(),
+                    null)));
     }
 
     public void editWorkLog(WorkLogDto workLogDto) {
@@ -137,7 +146,7 @@ public class WorkDay implements Serializable {
     }
 
     private Optional<Instant> modifyWorkloads(WorkLogDto workLogDto) {
-        Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
+        Instant now = now().truncatedTo(MINUTES);
         Instant started = isBlank(workLogDto.getStarted())
                 ? buildDateTimeInstant(this.createDate, now)
                 : buildDateTimeInstant(this.createDate, workLogDto.getStarted());

@@ -3,8 +3,7 @@ package pko.unity.time.tracker.domain;
 import com.google.common.annotations.VisibleForTesting;
 
 import javax.persistence.*;
-import javax.validation.constraints.*;
-
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
@@ -127,6 +126,11 @@ public class WorkLog implements Serializable {
 
     public void start(Instant startedAt) {
         this.started = startedAt;
+        this.ended = null;
+        this.status = IN_PROGRSS;
+    }
+
+    public void contiune() {
         this.ended = null;
         this.status = IN_PROGRSS;
     }

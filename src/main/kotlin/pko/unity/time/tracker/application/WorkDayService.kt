@@ -100,6 +100,12 @@ class WorkDayService @Autowired constructor(
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
+    fun continueWorkLog(workDayId: Long, workLogId: Long) {
+        val workDay = workDayJpaRepository.getOne(workDayId)
+        workDay.continueTracking(workLogId);
+        workDayJpaRepository.saveAndFlush(workDay)
+    }
+
     private fun convertToDto(workDay: WorkDay) = WorkDayDto(
         workDay.id,
         workDay.createDate,

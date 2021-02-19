@@ -23,6 +23,7 @@
                 <div class="form-inline">
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary">💾 Chanege date</button>
+                        <a class="ml-2 btn btn-primary" href="#" role="button">📨 Export to JIRA</a>
                         <a class="ml-2 btn btn-danger" href="/work-day/stop?workDayId=${workDay.id?c}" role="button">⏹️ Stop tracking</a>
                     </div>
                 </div>
@@ -54,7 +55,8 @@
                     <div class="form-inline">
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary">💾 Save</button>
-                            <a class="ml-2 btn btn-primary" href="/work-day/work-log/start?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button">▶️️ Start tracking</a>
+                            <a class="ml-2 btn btn-primary" href="/work-day/work-log/start?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button">▶ Start new like this</a>
+                            <a class="ml-2 btn btn-primary<#if !workDay.workLogs?has_content || workDay.workLogs?last.id != searchedWorkLogId> disabled</#if>" href="/work-day/work-log/continue?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button">➡ Continue</a>
                             <a class="ml-2 btn btn-warning" href="/work-day/edit?workDayId=${workDay.id?c}" role="button">❌️ Cancel</a>
                         </div>
                     </div>
