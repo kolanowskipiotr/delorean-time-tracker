@@ -5,13 +5,10 @@ import com.google.common.annotations.VisibleForTesting;
 import javax.persistence.*;
 import javax.validation.constraints.*;
 
-import java.io.OptionalDataException;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Optional;
 
-import static java.util.Optional.ofNullable;
 import static pko.unity.time.tracker.domain.WorkDayStatus.IN_PROGRSS;
 import static pko.unity.time.tracker.domain.WorkDayStatus.STOPED;
 
@@ -58,14 +55,17 @@ public class WorkLog implements Serializable {
     public WorkLog() {
     }
 
-    public WorkLog(WorkDay workDay, Instant started, Instant ended, String jiraIssueId, String jiraIssueName, String jiraIssueComment) {
+    public WorkLog(WorkDay workDay, Instant started, Instant ended, String jiraIssueId, String jiraIssueName, String jiraIssueComment, Instant endOfDay) {
         this.workDay = workDay;
+        updateState(started, ended, jiraIssueId, jiraIssueName, jiraIssueComment, endOfDay);
+    }
+
+    public void updateState(Instant started, Instant ended, String jiraIssueId, String jiraIssueName, String jiraIssueComment, Instant endOfDay) {
         this.jiraId = jiraIssueId;
         this.jiraName = jiraIssueName;
         this.comment = jiraIssueComment;
         this.start(started);
-        ofNullable(ended)
-                .ifPresent(this::end);
+        this.end(ended, endOfDay);
     }
 
     public Long getId() {
@@ -101,30 +101,33 @@ public class WorkLog implements Serializable {
         return ended;
     }
 
-    public long getTook() {
+    public long getDuration() {
         Duration duration = Duration.between(started, (ended == null ? Instant.now() : ended));
         return duration.toMinutes();
     }
 
     public boolean isEnded() {
-        return this.ended!= null;
+        return this.ended != null;
     }
 
     public boolean isNotEnded() {
         return !isEnded();
     }
 
-    public void end(Instant endAt) {
-        this.ended = endAt;
-        this.status = STOPED;
+    public void end(Instant endAt, Instant endOfDay) {
+        if (endAt != null) {
+            this.ended = this.started.isAfter(endAt) ? endOfDay : endAt;
+            this.status = STOPED;
+        }
     }
 
     void setEnded(Instant endAt) {
         this.ended = endAt;
     }
 
-    private void start(Instant startedAt) {
+    public void start(Instant startedAt) {
         this.started = startedAt;
+        this.ended = null;
         this.status = IN_PROGRSS;
     }
 

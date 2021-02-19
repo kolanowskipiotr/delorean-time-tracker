@@ -25,7 +25,7 @@ class WorkDayService @Autowired constructor(
     @Transactional(readOnly = true)
     fun allWorkDays(): List<WorkDayDto> =
         workDayJpaRepository.findAll()
-            .map { WorkDayDto(it.id, it.createDate, it.status.name) }
+            .map { convertToDto(it) }
             .sortedByDescending { it.date }
 
     @Transactional(readOnly = true)
@@ -56,26 +56,7 @@ class WorkDayService @Autowired constructor(
 
     fun getWorkDay(workDayId: Long): WorkDayDto? =
         workDayJpaRepository.getOne(workDayId)
-            .let {
-                WorkDayDto(
-                    it.id,
-                    it.createDate,
-                    it.status.name,
-                    it.workLogs
-                        .sortedBy { it.started }
-                        .map {
-                            WorkLogDto(
-                                it.id,
-                                it.jiraId,
-                                timeString(it.started),
-                                timeString(it.ended),
-                                it.took,
-                                it.jiraName,
-                                it.comment,
-                                it.status.name
-                            )
-                        })
-            }
+            .let { convertToDto(it) }
 
     @Transactional
     fun updateWorkDay(workDayId: Long, date: LocalDate) {
@@ -88,6 +69,13 @@ class WorkDayService @Autowired constructor(
     fun addWorkLog(workDayId: Long, workLogDto: WorkLogDto) {
         val workDay = workDayJpaRepository.getOne(workDayId)
         workDay.addWorkLog(workLogDto);
+        workDayJpaRepository.saveAndFlush(workDay)
+    }
+
+    @Transactional
+    fun editWorkLog(workDayId: Long, workLogDto: WorkLogDto) {
+        val workDay = workDayJpaRepository.getOne(workDayId)
+        workDay.editWorkLog(workLogDto);
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
@@ -105,8 +93,34 @@ class WorkDayService @Autowired constructor(
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
+    @Transactional
+    fun startWorkLog(workDayId: Long, workLogId: Long) {
+        val workDay = workDayJpaRepository.getOne(workDayId)
+        workDay.startTracking(workLogId);
+        workDayJpaRepository.saveAndFlush(workDay)
+    }
+
+    private fun convertToDto(workDay: WorkDay) = WorkDayDto(
+        workDay.id,
+        workDay.createDate,
+        workDay.status.name,
+        workDay.duration,
+        workDay.workLogs.sortedBy { it.started }
+            .map {
+                WorkLogDto(
+                    it.id,
+                    it.jiraId,
+                    timeString(it.started),
+                    timeString(it.ended),
+                    it.duration,
+                    it.jiraName,
+                    it.comment,
+                    it.status.name
+                )
+            })
+
     private fun timeString(instatnt: Instant?): String? {
-        if(instatnt != null) {
+        if (instatnt != null) {
             return TIME_FORMATTER.format(instatnt)
         }
         return StringUtils.EMPTY

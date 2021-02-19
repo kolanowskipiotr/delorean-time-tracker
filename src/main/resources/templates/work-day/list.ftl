@@ -27,10 +27,11 @@
             <table class="table table-striped">
                 <thead class="thead-dark">
                 <tr>
-                    <th style="width: 5%">#</th>
-                    <th style="width: 35%">Day</th>
-                    <th style="width: 35%">State</th>
-                    <th style="width: 25%">Actions</th>
+                    <th>#</th>
+                    <th>Day</th>
+                    <th>Duration</th>
+                    <th>State</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -38,6 +39,7 @@
                     <tr>
                         <td>${workDay_index +1}</td>
                         <td>${workDay.date?html}</td>
+                        <td class="text-center"><#if workDay.duration??>${workDay.duration}m<br>(${(workDay.duration/60)?floor}h ${workDay.duration - ((workDay.duration/60)?floor * 60)}m)</#if> </td>
                         <td>${workDay.state?html}</td>
                         <td>
                             <div class="btn-toolbar" role="toolbar">

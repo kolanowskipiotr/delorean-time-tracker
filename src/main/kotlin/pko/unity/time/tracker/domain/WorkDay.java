@@ -1,6 +1,5 @@
 package pko.unity.time.tracker.domain;
 
-import org.apache.commons.lang3.StringUtils;
 import pko.unity.time.tracker.ui.work.day.dto.WorkLogDto;
 
 import javax.persistence.*;
@@ -10,6 +9,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,6 +26,8 @@ import static pko.unity.time.tracker.domain.WorkDayStatus.*;
 public class WorkDay implements Serializable {
 
     private static final long serialVersionUID = 2915958533629303136L;
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm")
+            .withZone(ZoneId.systemDefault());
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
@@ -60,6 +62,11 @@ public class WorkDay implements Serializable {
         return workLogs;
     }
 
+    public Long getDuration(){
+        return this.workLogs.stream()
+                .map(WorkLog::getDuration)
+                .reduce(0L, Long::sum);
+    }
 
     public void update(LocalDate date) {
         this.createDate = date;
@@ -81,7 +88,55 @@ public class WorkDay implements Serializable {
         endWorklogs(now);
     }
 
+    public void startTracking(long workLogId) {
+        Instant now = buildDateTimeInstant(this.createDate, Instant.now().truncatedTo(ChronoUnit.MINUTES));
+        this.workLogs.stream()
+                .filter(workLog -> workLog.getId().equals(workLogId))
+                .forEach(it -> addWorkLog(new WorkLogDto(
+                        null,
+                        it.getJiraId(),
+                        TIME_FORMATTER.format(now),
+                        null,
+                        null,
+                        it.getJiraName(),
+                        it.getComment(),
+                        null)));
+    }
+
+    public void editWorkLog(WorkLogDto workLogDto) {
+        Optional<Instant> startAt = modifyWorkloads(workLogDto);
+        Instant ended = isBlank(workLogDto.getEnded()) ? null : buildDateTimeInstant(this.createDate, workLogDto.getEnded());
+        Instant endOfDay = buildDateTimeInstantEndOfDay(this.createDate);
+
+        startAt.ifPresent(started -> this.workLogs.stream()
+                .filter(workLog -> workLog.getId().equals(workLogDto.getId()))
+                .findFirst()
+                .ifPresent(worklog -> worklog.updateState(
+                        started,
+                        ended,
+                        workLogDto.getJiraIssiueId(),
+                        workLogDto.getJiraIssiueName(),
+                        workLogDto.getJiraIssiueComment(),
+                        endOfDay)));
+    }
+
     public void addWorkLog(WorkLogDto workLogDto) {
+        Optional<Instant> startAt = modifyWorkloads(workLogDto);
+
+        startAt.map(it -> new WorkLog(
+                this,
+                it,
+                isBlank(workLogDto.getEnded())
+                        ? null
+                        : buildDateTimeInstant(this.createDate, workLogDto.getEnded()),
+                workLogDto.getJiraIssiueId(),
+                workLogDto.getJiraIssiueName(),
+                workLogDto.getJiraIssiueComment(),
+                buildDateTimeInstantEndOfDay(this.createDate)))
+                .ifPresent(workLogs::add);
+    }
+
+    private Optional<Instant> modifyWorkloads(WorkLogDto workLogDto) {
         Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
         Instant started = isBlank(workLogDto.getStarted())
                 ? buildDateTimeInstant(this.createDate, now)
@@ -89,38 +144,30 @@ public class WorkDay implements Serializable {
         Instant ended = isBlank(workLogDto.getEnded())
                 ? buildDateTimeInstantEndOfDay(this.createDate)
                 : buildDateTimeInstant(this.createDate, workLogDto.getEnded());
-        if(started.isBefore(ended)) {
-            Long idToExclude = workLogDto.getId();
 
-            if(isBlank(workLogDto.getEnded())) {
+        if (started.isBefore(ended)) {
+            if (isBlank(workLogDto.getEnded())) {
                 endWorklogs(started);
             }
+            moveWorklogs(started, ended, workLogDto.getId());
+            return Optional.of(started);
+        }
+        return Optional.empty();
+    }
 
-            //update
-            Set<Long> workLogInConflictIds = emptySet();
-            if (!isOverridingOtherWorklog(started, ended, idToExclude)) {
-                adjustNeighbourWorklogs(started, ended, idToExclude);
-            }
-            //update
-
-            this.workLogs.add(new WorkLog(
-                    this,
-                    started,
-                    isBlank(workLogDto.getEnded())
-                            ? null
-                            : buildDateTimeInstant(this.createDate, workLogDto.getEnded()),
-                    workLogDto.getJiraIssiueId(),
-                    workLogDto.getJiraIssiueName(),
-                    workLogDto.getJiraIssiueComment()));
+    private void moveWorklogs(Instant started, Instant ended, Long idToExclude) {
+        if (!isOverridingOtherWorklog(started, ended, idToExclude)) {
+            adjustNeighbourWorklogs(started, ended, idToExclude);
         }
     }
 
-    public Set<Long> workLogInConflictIds(){
+    public Set<Long> workLogInConflictIds() {
         return this.workLogs.stream()
                 .map(it -> workLogInConflictIds(it.getStarted(), endedOrEndOfDay(it), it.getId()))
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
     }
+
     private Set<Long> workLogInConflictIds(Instant started, Instant ended, Long idToExclude) {
         return this.workLogs.stream()
                 .filter(it -> !it.getId().equals(idToExclude))
@@ -145,9 +192,10 @@ public class WorkDay implements Serializable {
     }
 
     private void endWorklogs(Instant ended) {
+        Instant endOfDay = buildDateTimeInstantEndOfDay(this.createDate);
         this.workLogs.stream()
                 .filter(WorkLog::isNotEnded)
-                .forEach(it -> it.end(ended));
+                .forEach(it -> it.end(ended, endOfDay));
     }
 
     private boolean isOverridingOtherWorklog(Instant started, Instant ended, Long idToExclude) {

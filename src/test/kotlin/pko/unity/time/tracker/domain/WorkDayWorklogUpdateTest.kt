@@ -9,7 +9,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-internal class WorkDayWorklogAddTest {
+internal class WorkDayWorklogUpdateTest {
 
     @Test
     fun `should adjust neighbours`() {
@@ -20,7 +20,7 @@ internal class WorkDayWorklogAddTest {
         addWorklog(workDay, WorkLogDto(3L, "3", "06:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(4L, "4", "03:00", "05:00"))
+        workDay.editWorkLog(WorkLogDto(2L, "2", "03:00", "07:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -28,17 +28,13 @@ internal class WorkDayWorklogAddTest {
         assertThat(timeString(worklogsAfterChanges[0].started)).isEqualTo("02:00")
         assertThat(timeString(worklogsAfterChanges[0].ended)).isEqualTo("03:00")
 
-        assertThat(worklogsAfterChanges[1].jiraId).isEqualTo("4")
+        assertThat(worklogsAfterChanges[1].jiraId).isEqualTo("2")
         assertThat(timeString(worklogsAfterChanges[1].started)).isEqualTo("03:00")
-        assertThat(timeString(worklogsAfterChanges[1].ended)).isEqualTo("05:00")
+        assertThat(timeString(worklogsAfterChanges[1].ended)).isEqualTo("07:00")
 
-        assertThat(worklogsAfterChanges[2].jiraId).isEqualTo("2")
-        assertThat(timeString(worklogsAfterChanges[2].started)).isEqualTo("05:00")
-        assertThat(timeString(worklogsAfterChanges[2].ended)).isEqualTo("06:00")
-
-        assertThat(worklogsAfterChanges[3].jiraId).isEqualTo("3")
-        assertThat(timeString(worklogsAfterChanges[3].started)).isEqualTo("06:00")
-        assertThat(worklogsAfterChanges[3].ended).isNull()
+        assertThat(worklogsAfterChanges[2].jiraId).isEqualTo("3")
+        assertThat(timeString(worklogsAfterChanges[2].started)).isEqualTo("07:00")
+        assertThat(worklogsAfterChanges[2].ended).isNull()
 
         assertThat(workDay.workLogInConflictIds()).isEmpty()
     }
@@ -48,10 +44,11 @@ internal class WorkDayWorklogAddTest {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
         addWorklog(workDay, WorkLogDto(1L, "1", "01:00", "02:00"))
-        addWorklog(workDay, WorkLogDto(2L, "2", "06:00"))
+        addWorklog(workDay, WorkLogDto(2L, "2", "03:00", "06:00"))
+        addWorklog(workDay, WorkLogDto(3L, "3", "06:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(3L, "3", "03:00", "07:00"))
+        workDay.editWorkLog(WorkLogDto(2L, "2", "03:00", "07:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -59,11 +56,11 @@ internal class WorkDayWorklogAddTest {
         assertThat(timeString(worklogsAfterChanges[0].started)).isEqualTo("01:00")
         assertThat(timeString(worklogsAfterChanges[0].ended)).isEqualTo("02:00")
 
-        assertThat(worklogsAfterChanges[1].jiraId).isEqualTo("3")
+        assertThat(worklogsAfterChanges[1].jiraId).isEqualTo("2")
         assertThat(timeString(worklogsAfterChanges[1].started)).isEqualTo("03:00")
         assertThat(timeString(worklogsAfterChanges[1].ended)).isEqualTo("07:00")
 
-        assertThat(worklogsAfterChanges[2].jiraId).isEqualTo("2")
+        assertThat(worklogsAfterChanges[2].jiraId).isEqualTo("3")
         assertThat(timeString(worklogsAfterChanges[2].started)).isEqualTo("07:00")
         assertThat(worklogsAfterChanges[2].ended).isNull()
 
@@ -75,10 +72,11 @@ internal class WorkDayWorklogAddTest {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
         addWorklog(workDay, WorkLogDto(1L, "1", "02:00", "04:00"))
-        addWorklog(workDay, WorkLogDto(2L, "2", "07:00"))
+        addWorklog(workDay, WorkLogDto(2L, "2", "04:00", "05:00"))
+        addWorklog(workDay, WorkLogDto(3L, "3", "05:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(4L, "4", "03:00", "05:00"))
+        workDay.editWorkLog(WorkLogDto(2L, "2", "03:00", "05:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -86,12 +84,12 @@ internal class WorkDayWorklogAddTest {
         assertThat(timeString(worklogsAfterChanges[0].started)).isEqualTo("02:00")
         assertThat(timeString(worklogsAfterChanges[0].ended)).isEqualTo("03:00")
 
-        assertThat(worklogsAfterChanges[1].jiraId).isEqualTo("4")
+        assertThat(worklogsAfterChanges[1].jiraId).isEqualTo("2")
         assertThat(timeString(worklogsAfterChanges[1].started)).isEqualTo("03:00")
         assertThat(timeString(worklogsAfterChanges[1].ended)).isEqualTo("05:00")
 
-        assertThat(worklogsAfterChanges[2].jiraId).isEqualTo("2")
-        assertThat(timeString(worklogsAfterChanges[2].started)).isEqualTo("07:00")
+        assertThat(worklogsAfterChanges[2].jiraId).isEqualTo("3")
+        assertThat(timeString(worklogsAfterChanges[2].started)).isEqualTo("05:00")
         assertThat(worklogsAfterChanges[2].ended).isNull()
 
         assertThat(workDay.workLogInConflictIds()).isEmpty()
@@ -102,10 +100,11 @@ internal class WorkDayWorklogAddTest {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
         addWorklog(workDay, WorkLogDto(1L, "1", "01:00", "02:00"))
+        addWorklog(workDay, WorkLogDto(3L, "3", "03:00", "04:00"))
         addWorklog(workDay, WorkLogDto(2L, "2", "06:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(3L, "3", "03:00", "04:00"))
+        workDay.editWorkLog(WorkLogDto(3L, "3", "02:30", "05:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -114,8 +113,8 @@ internal class WorkDayWorklogAddTest {
         assertThat(timeString(worklogsAfterChanges[0].ended)).isEqualTo("02:00")
 
         assertThat(worklogsAfterChanges[1].jiraId).isEqualTo("3")
-        assertThat(timeString(worklogsAfterChanges[1].started)).isEqualTo("03:00")
-        assertThat(timeString(worklogsAfterChanges[1].ended)).isEqualTo("04:00")
+        assertThat(timeString(worklogsAfterChanges[1].started)).isEqualTo("02:30")
+        assertThat(timeString(worklogsAfterChanges[1].ended)).isEqualTo("05:00")
 
         assertThat(worklogsAfterChanges[2].jiraId).isEqualTo("2")
         assertThat(timeString(worklogsAfterChanges[2].started)).isEqualTo("06:00")
@@ -130,10 +129,11 @@ internal class WorkDayWorklogAddTest {
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
         addWorklog(workDay, WorkLogDto(1L, "1", "02:00"))
         addWorklog(workDay, WorkLogDto(2L, "2", "04:00"))
+        addWorklog(workDay, WorkLogDto(4L, "4", "05:00"))
         addWorklog(workDay, WorkLogDto(3L, "3", "06:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(4L, "4", "03:00", "07:00"))
+        workDay.editWorkLog(WorkLogDto(4L, "4", "03:00", "07:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -151,7 +151,7 @@ internal class WorkDayWorklogAddTest {
 
         assertThat(worklogsAfterChanges[2].jiraId).isEqualTo("2")
         assertThat(timeString(worklogsAfterChanges[2].started)).isEqualTo("04:00")
-        assertThat(timeString(worklogsAfterChanges[2].ended)).isEqualTo("06:00")
+        assertThat(timeString(worklogsAfterChanges[2].ended)).isEqualTo("05:00")
         assertThat(workLogInConflictIds).contains(2L)
 
         assertThat(worklogsAfterChanges[3].jiraId).isEqualTo("3")
@@ -166,10 +166,11 @@ internal class WorkDayWorklogAddTest {
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
         addWorklog(workDay, WorkLogDto(1L, "1", "02:00"))
         addWorklog(workDay, WorkLogDto(2L, "2", "04:00"))
+        addWorklog(workDay, WorkLogDto(4L, "4", "05:00"))
         addWorklog(workDay, WorkLogDto(3L, "3", "06:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(4L, "4", "04:00", "06:00"))
+        workDay.editWorkLog(WorkLogDto(2L, "2", "04:00", "06:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -186,48 +187,12 @@ internal class WorkDayWorklogAddTest {
         assertThat(workLogInConflictIds).contains(2L)
 
         assertThat(worklogsAfterChanges[2].jiraId).isEqualTo("4")
-        assertThat(timeString(worklogsAfterChanges[2].started)).isEqualTo("04:00")
+        assertThat(timeString(worklogsAfterChanges[2].started)).isEqualTo("05:00")
         assertThat(timeString(worklogsAfterChanges[2].ended)).isEqualTo("06:00")
         assertThat(workLogInConflictIds).contains(4L)
 
         assertThat(worklogsAfterChanges[3].jiraId).isEqualTo("3")
         assertThat(timeString(worklogsAfterChanges[3].started)).isEqualTo("06:00")
-        assertThat(worklogsAfterChanges[3].ended).isNull()
-        assertThat(workLogInConflictIds).doesNotContain(3L)
-    }
-
-    @Test
-    fun `should add worklog when it its ovveriding other worklogs and consider them in conflict edge start and stop on conflictedworklog only`() {
-        //given
-        val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, "1", "01:00", "02:00"))
-        addWorklog(workDay, WorkLogDto(2L, "2", "04:00", "05:00"))
-        addWorklog(workDay, WorkLogDto(3L, "3", "07:00"))
-
-        //when
-        addWorklog(workDay, WorkLogDto(4L, "4", "03:00", "06:00"))
-
-        //then
-        val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
-        val workLogInConflictIds = workDay.workLogInConflictIds()
-
-        assertThat(worklogsAfterChanges[0].jiraId).isEqualTo("1")
-        assertThat(timeString(worklogsAfterChanges[0].started)).isEqualTo("01:00")
-        assertThat(timeString(worklogsAfterChanges[0].ended)).isEqualTo("02:00")
-        assertThat(workLogInConflictIds).doesNotContain(1L)
-
-        assertThat(worklogsAfterChanges[1].jiraId).isEqualTo("4")
-        assertThat(timeString(worklogsAfterChanges[1].started)).isEqualTo("03:00")
-        assertThat(timeString(worklogsAfterChanges[1].ended)).isEqualTo("06:00")
-        assertThat(workLogInConflictIds).contains(4L)
-
-        assertThat(worklogsAfterChanges[2].jiraId).isEqualTo("2")
-        assertThat(timeString(worklogsAfterChanges[2].started)).isEqualTo("04:00")
-        assertThat(timeString(worklogsAfterChanges[2].ended)).isEqualTo("05:00")
-        assertThat(workLogInConflictIds).contains(2L)
-
-        assertThat(worklogsAfterChanges[3].jiraId).isEqualTo("3")
-        assertThat(timeString(worklogsAfterChanges[3].started)).isEqualTo("07:00")
         assertThat(worklogsAfterChanges[3].ended).isNull()
         assertThat(workLogInConflictIds).doesNotContain(3L)
     }
@@ -239,7 +204,6 @@ internal class WorkDayWorklogAddTest {
         workDay.addWorkLog(workLogDto)
         workDay.workLogs.forEach { it -> it.id = Integer.parseInt(it.jiraId).toLong() }
     }
-
 
     var TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm")
         .withZone(ZoneId.systemDefault())
