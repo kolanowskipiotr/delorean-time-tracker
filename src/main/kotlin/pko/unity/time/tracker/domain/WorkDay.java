@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static pko.unity.time.tracker.domain.WorkDayStatus.*;
 
@@ -63,7 +65,20 @@ public class WorkDay implements Serializable {
     }
 
     public Long getDuration() {
-        return this.workLogs.stream()
+        return sumDurations(this.workLogs);
+    }
+
+    public Map<String, Long> getStatistics() {
+        Map<String, Long> statistics = this.workLogs.stream()
+                .collect(groupingBy(WorkLog::getProjectKey))
+                .entrySet().stream()
+                .collect(toMap(entry -> entry.getKey(), entry -> sumDurations(entry.getValue())));
+
+        return statistics;
+    }
+
+    private Long sumDurations(Collection<WorkLog> workLogs) {
+        return workLogs.stream()
                 .map(WorkLog::getDuration)
                 .reduce(0L, Long::sum);
     }

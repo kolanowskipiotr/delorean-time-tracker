@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static pko.unity.time.tracker.domain.WorkDayStatus.IN_PROGRSS;
 import static pko.unity.time.tracker.domain.WorkDayStatus.STOPED;
 
@@ -82,6 +83,10 @@ public class WorkLog implements Serializable {
 
     public String getJiraId() {
         return jiraId;
+    }
+
+    public String getProjectKey() {
+        return substringBefore(this.getJiraId().trim(), "-");
     }
 
     public String getJiraName() {

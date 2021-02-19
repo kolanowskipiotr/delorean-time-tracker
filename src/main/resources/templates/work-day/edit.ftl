@@ -115,5 +115,34 @@
             </table>
         </div>
     </div>
+
+
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Statistics:</h3>
+
+            <div class="list-group">
+                <div class="list-group-item list-group-item-action flex-column align-items-start active">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Whole day</h5>
+                        <small>${workDay.date} 100%</small>
+                    </div>
+                    <p class="mb-1"><#if workDay.duration??>${workDay.duration}m (${(workDay.duration/60)?floor}h ${workDay.duration - ((workDay.duration/60)?floor * 60)}m)</#if></p>
+                </div>
+                <#if workDay.statistics??>
+                    <#list workDay.statistics?keys as key>
+                        <#assign val=workDay.statistics[key]/>
+                        <div class="list-group-item list-group-item-action flex-column align-items-start">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">${key}</h5>
+                                <small>${val/workDay.duration*100}%</small>
+                            </div>
+                            <p class="mb-1"><#if val??>${val}m (${(val/60)?floor}h ${val - ((val/60)?floor * 60)}m)</#if></p>
+                        </div>
+                    </#list>
+                </#if>
+            </div>
+        </div>
+    </div>
 </div> <!-- /container -->
 <#include "/footer.ftl">

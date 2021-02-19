@@ -30,6 +30,7 @@
                     <th>#</th>
                     <th>Day</th>
                     <th>Duration</th>
+                    <th>Statistics</th>
                     <th>State</th>
                     <th>Actions</th>
                 </tr>
@@ -40,6 +41,18 @@
                         <td>${workDay_index +1}</td>
                         <td>${workDay.date?html}</td>
                         <td class="text-center"><#if workDay.duration??>${workDay.duration}m<br>(${(workDay.duration/60)?floor}h ${workDay.duration - ((workDay.duration/60)?floor * 60)}m)</#if> </td>
+                        <td>
+                            <#if workDay.statistics??>
+                                <ul style="list-style-type:none;">
+                                    <#list workDay.statistics?keys as key>
+                                        <li>
+                                            <#assign val=workDay.statistics[key]/>
+                                            ${key} - <#if val??> ${val/workDay.duration*100}% - ${val}m (${(val/60)?floor}h ${val - ((val/60)?floor * 60)}m)</#if>
+                                        </li>
+                                    </#list>
+                                </ul>
+                            </#if>
+                        </td>
                         <td>${workDay.state?html}</td>
                         <td>
                             <div class="btn-toolbar" role="toolbar">

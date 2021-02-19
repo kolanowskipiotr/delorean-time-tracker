@@ -106,24 +106,26 @@ class WorkDayService @Autowired constructor(
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
-    private fun convertToDto(workDay: WorkDay) = WorkDayDto(
-        workDay.id,
-        workDay.createDate,
-        workDay.status.name,
-        workDay.duration,
-        workDay.workLogs.sortedBy { it.started }
-            .map {
-                WorkLogDto(
-                    it.id,
-                    it.jiraId,
-                    timeString(it.started),
-                    timeString(it.ended),
-                    it.duration,
-                    it.jiraName,
-                    it.comment,
-                    it.status.name
-                )
-            })
+    private fun convertToDto(workDay: WorkDay) =
+        WorkDayDto(
+            workDay.id,
+            workDay.createDate,
+            workDay.status.name,
+            workDay.duration,
+            workDay.statistics,
+            workDay.workLogs.sortedBy { it.started }
+                .map {
+                    WorkLogDto(
+                        it.id,
+                        it.jiraId,
+                        timeString(it.started),
+                        timeString(it.ended),
+                        it.duration,
+                        it.jiraName,
+                        it.comment,
+                        it.status.name
+                    )
+                })
 
     private fun timeString(instatnt: Instant?): String? {
         if (instatnt != null) {
