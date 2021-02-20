@@ -1,6 +1,6 @@
 # DeLorean Time Tracker
-This app let you track time and export it to JIra.
-This app is POC with fast-and-dirty code (Aplikacja pisana w stylu paździerzowym).
+1. This app let you track time and export it to JIra.
+2. This app is POC with fast-and-dirty code (Aplikacja pisana w stylu paździerzowym).
 
 ## How to run
 ### Windows
@@ -9,7 +9,7 @@ Use `run.bat`.
 1. Use `java -jar delorean-time-tracke-{VERSION}.jar` in your favorite terminal.
 1. Then open `http://localhost:9889` in your favorite browser.
 
-## Deploy
+## Package
 1. mvn package
 1. copy `target\delorean-time-tracke-{VERSION}.jar` to deploy place
 1. copy `run.bat` to deploy place
@@ -22,3 +22,4 @@ Use `run.bat`.
 1. Use props from `application.properties`
 
 ## Repository
+https://github.com/kolanowskipiotr/delorean-time-tracker
