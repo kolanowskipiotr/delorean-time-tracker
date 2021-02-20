@@ -143,7 +143,7 @@
                         <div class="list-group-item list-group-item-action flex-column align-items-start">
                             <div class="d-flex w-100 justify-content-between">
                                 <h5 class="mb-1">${key}</h5>
-                                <small>${val/workDay.duration*100}%</small>
+                                <small><#if workDay.duration gt 0 >$(val/workDay.duration*100}<#else>0</#if>%</small>
                             </div>
                             <p class="mb-1"><#if val??>${val}m (${(val/60)?floor}h ${val - ((val/60)?floor * 60)}m)</#if></p>
                         </div>
