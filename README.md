@@ -3,9 +3,11 @@
 2. This app is POC with fast-and-dirty code (Aplikacja pisana w stylu paździerzowym).
 
 ## How to run
-### Windows
+### Download latest version
+https://github.com/kolanowskipiotr/delorean-time-tracker/releases/tag/release-0.0.1
+### Run on Windows
 Use `run.bat`.
-### Linux
+### Run on Linux
 1. Use `java -jar delorean-time-tracke-{VERSION}.jar` in your favorite terminal.
 1. Then open `http://localhost:9889` in your favorite browser.
 
