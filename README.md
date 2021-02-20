@@ -23,3 +23,6 @@ Use `run.bat`.
 
 ## Repository
 https://github.com/kolanowskipiotr/delorean-time-tracker
+
+## How to report a problem
+https://github.com/users/kolanowskipiotr/projects/2
