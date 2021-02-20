@@ -65,7 +65,7 @@ public class WorkDay implements Serializable {
     public Set<ExportableWorkLog> getUnexportedWorkLogs() {
         return this.workLogs.stream()
                 .filter(workLog -> !workLog.getStatus().equals(EXPORTED))
-                .filter(workLog -> workLog.getDuration() > 0)
+                .filter(workLog -> workLogDuration(workLog) > 0)
                 .map(workLog -> new ExportableWorkLog(workLog, buildExportComment(workLog), createDate))
                 .collect(Collectors.toSet());
     }
@@ -74,7 +74,11 @@ public class WorkDay implements Serializable {
         return defaultString(worklog.getComment()) + " "
                 + Companion.getDATE_FORMATTER().format(createDate) + ", "
                 + Companion.getTIME_FORMATTER().format(worklog.getStarted()) + "-" + Companion.getTIME_FORMATTER().format(worklog.getEnded()) + " "
-                + "(" + worklog.getDuration() +  "m)";
+                + "(" + workLogDuration(worklog) + "m)";
+    }
+
+    public long workLogDuration(WorkLog worklog) {
+        return worklog.getDuration(Companion.buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES)));
     }
 
     public Long getDuration() {
@@ -92,7 +96,7 @@ public class WorkDay implements Serializable {
 
     private Long sumDurations(Collection<WorkLog> workLogs) {
         return workLogs.stream()
-                .map(WorkLog::getDuration)
+                .map(workLog -> workLogDuration(workLog))
                 .reduce(0L, Long::sum);
     }
 
@@ -136,14 +140,14 @@ public class WorkDay implements Serializable {
                 .collect(Collectors.toList());
         workLogsToCopy.forEach(it -> addWorkLog(
                 new WorkLogDto(
-                    null,
-                    it.getJiraId(),
-                    Companion.getTIME_FORMATTER().format(now),
-                    null,
-                    null,
-                    it.getJiraName(),
-                    it.getComment(),
-                    null)));
+                        null,
+                        it.getJiraId(),
+                        Companion.getTIME_FORMATTER().format(now),
+                        null,
+                        null,
+                        it.getJiraName(),
+                        it.getComment(),
+                        null)));
     }
 
     public void editWorkLog(WorkLogDto workLogDto) {

@@ -17,10 +17,13 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
 import org.springframework.web.context.annotation.ApplicationScope
 import pko.unity.time.tracker.domain.dto.ExportableWorkLog
+import pko.unity.time.tracker.kernel.Utils.Companion.buildDateTimeInstant
 import pko.unity.time.tracker.ui.jira.dto.JiraCredentialsDto
 import pko.unity.time.tracker.ui.jira.dto.JiraIssueDto
 import java.net.URI
+import java.time.Instant.now
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit.MINUTES
 
 
 @Repository
@@ -53,8 +56,9 @@ class JiraService {
         val exportedWorkLogIds = mutableListOf<Long>()
         try {
             val restClient: JiraRestClient = buildJiraClient()
-            exportableWorkLogs.forEach{ exportableWorkLog ->
-                exportedWorkLogIds.add(exportWorkLog(restClient, exportableWorkLog))}
+            exportableWorkLogs.forEach { exportableWorkLog ->
+                exportedWorkLogIds.add(exportWorkLog(restClient, exportableWorkLog))
+            }
             restClient.close()
         } catch (e: Exception) { //FIXME: Catch only important exceptions
             logger.error(e.message, e)
@@ -71,7 +75,11 @@ class JiraService {
         val worklogInput = WorklogInputBuilder(issue.self)
             .setStartDate(exportableWorkLog.date.toDateTime())
             .setComment(exportableWorkLog.comment)
-            .setMinutesSpent(workLog.duration.toInt())
+            .setMinutesSpent(
+                exportableWorkLog.worklog.getDuration(
+                    buildDateTimeInstant(exportableWorkLog.date, now().truncatedTo(MINUTES))
+                ).toInt()
+            )
             .build()
         val result = issueClient.addWorklog(issue.worklogUri, worklogInput)
         result.claim()
@@ -84,6 +92,7 @@ class JiraService {
             this.year, this.monthValue, this.dayOfMonth
         ).withTime(0, 0, 0, 0)
     }
+
     fun credentials(): JiraCredentialsDto? =
         this.jiraCredentials
 
@@ -122,8 +131,7 @@ class JiraService {
     private fun buildQueryPart(word: String, projectNames: List<String>, issiueTypes: List<String>): String {
         if (projectNames.contains(word.toUpperCase())) {
             return "project = " + word.toUpperCase()
-        }
-        else if ( issiueTypes.contains(word.toUpperCase())) {
+        } else if (issiueTypes.contains(word.toUpperCase())) {
             return "issuetype = " + word.toLowerCase()
         }
 
@@ -169,11 +177,11 @@ class JiraService {
         val message: String? = null
     ) {
         companion object {
-            fun <V>error(value: V?, message: String? = null) =
-                ConnectionResult(false, value, StringUtils.abbreviate(message,200))
+            fun <V> error(value: V?, message: String? = null) =
+                ConnectionResult(false, value, StringUtils.abbreviate(message, 200))
 
-            fun <V>success(value: V?, message: String? = null) =
-                ConnectionResult(true, value, StringUtils.abbreviate(message,200))
+            fun <V> success(value: V?, message: String? = null) =
+                ConnectionResult(true, value, StringUtils.abbreviate(message, 200))
         }
     }
 }

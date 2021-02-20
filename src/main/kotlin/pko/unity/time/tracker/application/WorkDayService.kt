@@ -135,7 +135,7 @@ class WorkDayService @Autowired constructor(
                         it.jiraId,
                         timeString(it.started),
                         timeString(it.ended),
-                        it.duration,
+                        workDay.workLogDuration(it),
                         it.jiraName,
                         it.comment,
                         it.status.name

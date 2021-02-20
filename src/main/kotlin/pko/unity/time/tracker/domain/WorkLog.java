@@ -117,8 +117,8 @@ public class WorkLog implements Serializable {
         return ended;
     }
 
-    public long getDuration() {
-        Duration duration = Duration.between(started, (ended == null ? Instant.now() : ended));
+    public long getDuration(Instant endedDefault) {
+        Duration duration = Duration.between(started, (ended == null ? endedDefault : ended));
         return duration.toMinutes();
     }
 
