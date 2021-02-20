@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>pko</groupId>
 	<artifactId>delorean-time-tracke</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>DeLorean Time Tracker</name>
 	<description>Time tracker with Jira integration</description>
 
