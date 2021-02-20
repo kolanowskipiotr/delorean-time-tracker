@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>pko</groupId>
-	<artifactId>unity-time-tracker</artifactId>
+	<artifactId>delorean-time-tracke</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>unity-time-tracker</name>
+	<name>DeLorean Time Tracker</name>
 	<description>Time tracker with Jira integration</description>
 
 	<properties>

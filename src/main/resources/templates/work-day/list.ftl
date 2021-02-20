@@ -1,5 +1,5 @@
-<#-- @ftlvariable name="templates" type="pko.unity.time.tracker.ui.work.day.dto.WorkDayDto[]" -->
-<#-- @ftlvariable name="template" type="pko.unity.time.tracker.ui.work.day.dto.WorkDayDto" -->
+<#-- @ftlvariable name="templates" type="pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto[]" -->
+<#-- @ftlvariable name="template" type="pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto" -->
 
 <#include "/header.ftl">
 

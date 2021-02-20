@@ -1,5 +1,5 @@
 @ECHO OFF
-start java -jar mail-template-sender-0.0.1-SNAPSHOT.jar
-ECHO Oczekiwanie na start serwera...
+start java -jar delorean-time-tracker-0.0.1-SNAPSHOT.jar
+ECHO Waiting [30s] for server start...
 timeout 30
-start http://localhost:8080
+start http://localhost:9889

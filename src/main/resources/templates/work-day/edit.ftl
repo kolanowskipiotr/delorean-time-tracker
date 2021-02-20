@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="workDay" type="pko.unity.time.tracker.ui.work.day.dto.WorkDayDto" -->
+<#-- @ftlvariable name="workDay" type="pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto" -->
 
 <#include "/header.ftl">
 

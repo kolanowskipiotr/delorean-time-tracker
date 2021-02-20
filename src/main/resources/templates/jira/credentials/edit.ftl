@@ -1,4 +1,4 @@
-<#-- @ftlvariable name="jiraCredentials" type="pko.unity.time.tracker.ui.jira.dto.JiraCredentialsDto" -->
+<#-- @ftlvariable name="jiraCredentials" type="pko.delorean.time.tracker.ui.jira.dto.JiraCredentialsDto" -->
 
 <#include "/header.ftl">
 
