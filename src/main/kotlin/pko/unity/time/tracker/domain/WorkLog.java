@@ -69,21 +69,8 @@ public class WorkLog implements Serializable {
         updateState(started, ended, jiraIssueId, jiraIssueName, jiraIssueComment, endOfDay);
     }
 
-    public void updateState(Instant started, Instant ended, String jiraIssueId, String jiraIssueName, String jiraIssueComment, Instant endOfDay) {
-        this.jiraId = jiraIssueId;
-        this.jiraName = jiraIssueName;
-        this.comment = jiraIssueComment;
-        this.start(started);
-        this.end(ended, endOfDay);
-    }
-
     public Long getId() {
         return id;
-    }
-
-    @VisibleForTesting
-    void setId(Long id) {
-        this.id = id;
     }
 
     public WorkDayStatus getStatus() {
@@ -98,10 +85,6 @@ public class WorkLog implements Serializable {
         return jiraId;
     }
 
-    public String getProjectKey() {
-        return substringBefore(this.getJiraId().trim(), "-");
-    }
-
     public String getJiraName() {
         return jiraName;
     }
@@ -109,7 +92,6 @@ public class WorkLog implements Serializable {
     public String getComment() {
         return comment;
     }
-
 
     public Instant getStarted() {
         return started;
@@ -124,40 +106,56 @@ public class WorkLog implements Serializable {
         return duration.toMinutes();
     }
 
-    public boolean isEnded() {
+    @VisibleForTesting
+    void setId(Long id) {
+        this.id = id;
+    }
+
+    String getProjectKey() {
+        return substringBefore(this.getJiraId().trim(), "-");
+    }
+
+    boolean isEnded() {
         return this.ended != null;
     }
 
-    public boolean isNotEnded() {
+    boolean isNotEnded() {
         return !isEnded();
-    }
-
-    public void end(Instant endAt, Instant endOfDay) {
-        if (endAt != null) {
-            this.ended = this.started.isAfter(endAt) ? endOfDay : endAt;
-            this.status = STOPED;
-        }
-    }
-
-    void setEnded(Instant endAt) {
-        this.ended = endAt;
-    }
-
-    public void start(Instant startedAt) {
-        this.started = startedAt;
-        this.ended = null;
-        this.status = IN_PROGRSS;
-    }
-
-    public void contiune() {
-        this.ended = null;
-        this.status = IN_PROGRSS;
     }
 
     void setStarted(Instant startedAt) {
         this.started = startedAt;
     }
 
+    void setEnded(Instant endAt) {
+        this.ended = endAt;
+    }
+
+    void updateState(Instant started, Instant ended, String jiraIssueId, String jiraIssueName, String jiraIssueComment, Instant endOfDay) {
+        this.jiraId = jiraIssueId;
+        this.jiraName = jiraIssueName;
+        this.comment = jiraIssueComment;
+        this.start(started);
+        this.end(ended, endOfDay);
+    }
+
+    void end(Instant endAt, Instant endOfDay) {
+        if (endAt != null) {
+            this.ended = this.started.isAfter(endAt) ? endOfDay : endAt;
+            this.status = STOPPED;
+        }
+    }
+
+    void start(Instant startedAt) {
+        this.started = startedAt;
+        this.ended = null;
+        this.status = IN_PROGRESS;
+    }
+
+    void contiune() {
+        this.ended = null;
+        this.status = IN_PROGRESS;
+    }
 
     @Override
     public boolean equals(Object o) {

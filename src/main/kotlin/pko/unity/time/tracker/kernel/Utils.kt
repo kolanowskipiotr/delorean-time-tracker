@@ -1,5 +1,6 @@
 package pko.unity.time.tracker.kernel
 
+import org.apache.commons.lang3.StringUtils
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -14,6 +15,13 @@ class Utils {
             .withZone(ZoneId.systemDefault())
         val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
             .withZone(ZoneId.systemDefault())
+
+        fun formatTime(instatnt: Instant?): String? {
+            if (instatnt != null) {
+                return TIME_FORMATTER.format(instatnt)
+            }
+            return StringUtils.EMPTY
+        }
 
         fun buildDateTimeInstant(date: LocalDate, time: Instant): Instant? {
             return date.atStartOfDay().atZone(ZoneId.systemDefault())

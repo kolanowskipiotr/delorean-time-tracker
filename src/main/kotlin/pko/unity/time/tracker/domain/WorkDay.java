@@ -42,13 +42,14 @@ public class WorkDay implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "workDay")
     private Set<WorkLog> workLogs = new HashSet<>();
 
-    //Hibernate nied this
+    //Hibernate need this
     public WorkDay() {
     }
 
     public WorkDay(LocalDate createDate) {
         this.createDate = createDate;
     }
+
 
     public Long getId() {
         return id;
@@ -70,13 +71,6 @@ public class WorkDay implements Serializable {
                 .collect(Collectors.toSet());
     }
 
-    private String buildExportComment(WorkLog worklog) {
-        return defaultString(worklog.getComment()) + " "
-                + Companion.getDATE_FORMATTER().format(createDate) + ", "
-                + Companion.getTIME_FORMATTER().format(worklog.getStarted()) + "-" + Companion.getTIME_FORMATTER().format(worklog.getEnded()) + " "
-                + "(" + workLogDuration(worklog) + "m)";
-    }
-
     public long workLogDuration(WorkLog worklog) {
         return worklog.getDuration(Companion.buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES)));
     }
@@ -89,15 +83,26 @@ public class WorkDay implements Serializable {
         Map<String, Long> statistics = this.workLogs.stream()
                 .collect(groupingBy(WorkLog::getProjectKey))
                 .entrySet().stream()
-                .collect(toMap(entry -> entry.getKey(), entry -> sumDurations(entry.getValue())));
+                .collect(toMap(Map.Entry::getKey, entry -> sumDurations(entry.getValue())));
 
         return statistics;
     }
 
-    private Long sumDurations(Collection<WorkLog> workLogs) {
-        return workLogs.stream()
-                .map(workLog -> workLogDuration(workLog))
-                .reduce(0L, Long::sum);
+    public WorkDayStatus getStatus() {
+        if (this.workLogs.stream().allMatch(wl -> wl.getStatus() == STOPPED)) {
+            return STOPPED;
+        }
+        if (this.workLogs.stream().allMatch(wl -> wl.getStatus() == EXPORTED)) {
+            return EXPORTED;
+        }
+        return IN_PROGRESS;
+    }
+
+    public Set<Long> workLogInConflictIds() {
+        return this.workLogs.stream()
+                .map(it -> workLogInConflictIds(it.getStarted(), endedOrEndOfDay(it), it.getId()))
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
     }
 
     public void update(LocalDate date) {
@@ -105,16 +110,6 @@ public class WorkDay implements Serializable {
         this.workLogs.forEach(
                 workLog -> workLog.changeDate(date)
         );
-    }
-
-    public WorkDayStatus getStatus() {
-        if (this.workLogs.stream().allMatch(wl -> wl.getStatus() == STOPED)) {
-            return STOPED;
-        }
-        if (this.workLogs.stream().allMatch(wl -> wl.getStatus() == EXPORTED)) {
-            return EXPORTED;
-        }
-        return IN_PROGRSS;
     }
 
     public void markExported(List<Long> exportedIds) {
@@ -152,6 +147,22 @@ public class WorkDay implements Serializable {
                         null)));
     }
 
+    public void addWorkLog(WorkLogDto workLogDto) {
+        Optional<Instant> startAt = modifyWorkloads(workLogDto);
+
+        startAt.map(it -> new WorkLog(
+                this,
+                it,
+                isBlank(workLogDto.getEnded())
+                        ? null
+                        : Companion.buildDateTimeInstant(this.createDate, workLogDto.getEnded()),
+                workLogDto.getJiraIssiueId(),
+                workLogDto.getJiraIssiueName(),
+                workLogDto.getJiraIssiueComment(),
+                Companion.buildDateTimeInstantEndOfDay(this.createDate)))
+                .ifPresent(workLogs::add);
+    }
+
     public void editWorkLog(WorkLogDto workLogDto) {
         Optional<Instant> startAt = modifyWorkloads(workLogDto);
         Instant ended = isBlank(workLogDto.getEnded()) ? null : Companion.buildDateTimeInstant(this.createDate, workLogDto.getEnded());
@@ -169,20 +180,21 @@ public class WorkDay implements Serializable {
                         endOfDay)));
     }
 
-    public void addWorkLog(WorkLogDto workLogDto) {
-        Optional<Instant> startAt = modifyWorkloads(workLogDto);
+    public void removeWorkLog(long workLogId) {
+        this.workLogs.removeIf(it -> it.getId() == workLogId);
+    }
 
-        startAt.map(it -> new WorkLog(
-                this,
-                it,
-                isBlank(workLogDto.getEnded())
-                        ? null
-                        : Companion.buildDateTimeInstant(this.createDate, workLogDto.getEnded()),
-                workLogDto.getJiraIssiueId(),
-                workLogDto.getJiraIssiueName(),
-                workLogDto.getJiraIssiueComment(),
-                Companion.buildDateTimeInstantEndOfDay(this.createDate)))
-                .ifPresent(workLogs::add);
+    private void endWorklogs(Instant ended) {
+        Instant endOfDay = Companion.buildDateTimeInstantEndOfDay(this.createDate);
+        this.workLogs.stream()
+                .filter(WorkLog::isNotEnded)
+                .forEach(it -> it.end(ended, endOfDay));
+    }
+
+    private Long sumDurations(Collection<WorkLog> workLogs) {
+        return workLogs.stream()
+                .map(this::workLogDuration)
+                .reduce(0L, Long::sum);
     }
 
     private Optional<Instant> modifyWorkloads(WorkLogDto workLogDto) {
@@ -210,19 +222,14 @@ public class WorkDay implements Serializable {
         }
     }
 
-    public Set<Long> workLogInConflictIds() {
-        return this.workLogs.stream()
-                .map(it -> workLogInConflictIds(it.getStarted(), endedOrEndOfDay(it), it.getId()))
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
-    }
-
-    private Set<Long> workLogInConflictIds(Instant started, Instant ended, Long idToExclude) {
+    private boolean isOverridingOtherWorklog(Instant started, Instant ended, Long idToExclude) {
         return this.workLogs.stream()
                 .filter(it -> !it.getId().equals(idToExclude))
-                .filter(it -> started.isBefore(endedOrEndOfDay(it)) & ended.isAfter(it.getStarted()))
-                .map(WorkLog::getId)
-                .collect(Collectors.toSet());
+                .anyMatch(it -> started.isBefore(it.getStarted()) && ended.isAfter(endedOrEndOfDay(it)));
+    }
+
+    private Instant endedOrEndOfDay(WorkLog workLog) {
+        return workLog.isEnded() ? workLog.getEnded() : Companion.buildDateTimeInstantEndOfDay(this.createDate);
     }
 
     private void adjustNeighbourWorklogs(Instant started, Instant ended, Long idToExclude) {
@@ -236,25 +243,24 @@ public class WorkDay implements Serializable {
                 .forEach(it -> it.setStarted(ended));
     }
 
-    private Instant endedOrEndOfDay(WorkLog workLog) {
-        return workLog.isEnded() ? workLog.getEnded() : Companion.buildDateTimeInstantEndOfDay(this.createDate);
-    }
-
-    private void endWorklogs(Instant ended) {
-        Instant endOfDay = Companion.buildDateTimeInstantEndOfDay(this.createDate);
-        this.workLogs.stream()
-                .filter(WorkLog::isNotEnded)
-                .forEach(it -> it.end(ended, endOfDay));
-    }
-
-    private boolean isOverridingOtherWorklog(Instant started, Instant ended, Long idToExclude) {
+    private Set<Long> workLogInConflictIds(Instant started, Instant ended, Long idToExclude) {
         return this.workLogs.stream()
                 .filter(it -> !it.getId().equals(idToExclude))
-                .anyMatch(it -> started.isBefore(it.getStarted()) && ended.isAfter(endedOrEndOfDay(it)));
+                .filter(it -> started.isBefore(endedOrEndOfDay(it)) & ended.isAfter(it.getStarted()))
+                .map(WorkLog::getId)
+                .collect(Collectors.toSet());
     }
 
-    public void removeWorkLog(long workLogId) {
-        this.workLogs.removeIf(it -> it.getId() == workLogId);
+    private String buildExportComment(WorkLog worklog) {
+        return defaultString(worklog.getComment()) + " "
+                + Companion.getDATE_FORMATTER().format(createDate) + ", "
+                + Companion.getTIME_FORMATTER().format(worklog.getStarted()) + "-" + Companion.getTIME_FORMATTER().format(worklog.getEnded()) + " "
+                + "(" + workLogDuration(worklog) + "m)";
+    }
+
+    @Override
+    public int hashCode() {
+        return 31;
     }
 
     @Override
@@ -266,11 +272,6 @@ public class WorkDay implements Serializable {
             return false;
         }
         return id != null && id.equals(((WorkDay) o).id);
-    }
-
-    @Override
-    public int hashCode() {
-        return 31;
     }
 
     // prettier-ignore

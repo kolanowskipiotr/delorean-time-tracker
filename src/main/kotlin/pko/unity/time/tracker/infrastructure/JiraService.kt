@@ -67,6 +67,38 @@ class JiraService {
         return ConnectionResult.success(exportedWorkLogIds)
     }
 
+    fun credentials(): JiraCredentialsDto? =
+        this.jiraCredentials
+
+    fun findJiraIssues(userQuery: String): ConnectionResult<List<JiraIssueDto>> {
+        var soundJiraIssues = listOf<JiraIssueDto>()
+        try {
+            val jiraClient = buildJiraClient()
+            val jiraQuery = buildJiraQuery(jiraClient, userQuery)
+            val searchClient = jiraClient.searchClient
+            soundJiraIssues = searchByIssueKey(searchClient, userQuery)
+                .plus(searchClient.searchJql(jiraQuery).claim().issues)
+                .map { JiraIssueDto(it.key, it.summary) }
+            jiraClient.close()
+        } catch (e: Exception) { //FIXME: Catch only important exceptions
+            logger.error(e.message, e)
+            return ConnectionResult.error(listOf(), e.toString() + defaultString(e.message))
+        }
+        return ConnectionResult.success(soundJiraIssues)
+    }
+
+    @Cacheable("getAllIssiueTypes")
+    fun getAllIssiueTypes(jiraClient: JiraRestClient): List<String> =
+        jiraClient.metadataClient.issueTypes.claim()
+            .map { it.name }
+            .map { it.toUpperCase() }
+
+    @Cacheable("getAllProjectNames")
+    fun getAllProjectNames(jiraClient: JiraRestClient) =
+        jiraClient.projectClient.allProjects.claim()
+            .map { it.key }
+            .map { it.toUpperCase() }
+
     private fun exportWorkLog(restClient: JiraRestClient, exportableWorkLog: ExportableWorkLog): Long {
         val workLog = exportableWorkLog.worklog
         val issueClient = restClient.issueClient
@@ -93,26 +125,6 @@ class JiraService {
         ).withTime(0, 0, 0, 0)
     }
 
-    fun credentials(): JiraCredentialsDto? =
-        this.jiraCredentials
-
-    fun findJiraIssues(userQuery: String): ConnectionResult<List<JiraIssueDto>> {
-        var soundJiraIssues = listOf<JiraIssueDto>()
-        try {
-            val jiraClient = buildJiraClient()
-            val jiraQuery = buildJiraQuery(jiraClient, userQuery)
-            val searchClient = jiraClient.searchClient
-            soundJiraIssues = searchByIssueKey(searchClient, userQuery)
-                .plus(searchClient.searchJql(jiraQuery).claim().issues)
-                .map { JiraIssueDto(it.key, it.summary) }
-            jiraClient.close()
-        } catch (e: Exception) { //FIXME: Catch only important exceptions
-            logger.error(e.message, e)
-            return ConnectionResult.error(listOf(), e.toString() + defaultString(e.message))
-        }
-        return ConnectionResult.success(soundJiraIssues)
-    }
-
     private fun buildJiraQuery(
         jiraClient: JiraRestClient,
         userQuery: String
@@ -137,18 +149,6 @@ class JiraService {
 
         return "(assignee = '$word' OR text ~ '$word*')"
     }
-
-    @Cacheable("getAllIssiueTypes")
-    fun getAllIssiueTypes(jiraClient: JiraRestClient): List<String> =
-        jiraClient.metadataClient.issueTypes.claim()
-            .map { it.name }
-            .map { it.toUpperCase() }
-
-    @Cacheable("getAllProjectNames")
-    fun getAllProjectNames(jiraClient: JiraRestClient) =
-        jiraClient.projectClient.allProjects.claim()
-            .map { it.key }
-            .map { it.toUpperCase() }
 
     private fun searchByIssueKey(searchClient: SearchRestClient, query: String): MutableList<Issue> {
         val keyQuery = "issuekey = \"${query.toUpperCase()}\""

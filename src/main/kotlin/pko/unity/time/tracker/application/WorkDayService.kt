@@ -1,6 +1,5 @@
 package pko.unity.time.tracker.application
 
-import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -8,22 +7,17 @@ import pko.unity.time.tracker.domain.WorkDay
 import pko.unity.time.tracker.infrastructure.JiraService
 import pko.unity.time.tracker.infrastructure.JiraService.ConnectionResult
 import pko.unity.time.tracker.infrastructure.WorkDayJpaRepository
+import pko.unity.time.tracker.kernel.Utils.Companion.formatTime
 import pko.unity.time.tracker.ui.jira.dto.JiraIssueDto
 import pko.unity.time.tracker.ui.work.day.dto.WorkDayDto
 import pko.unity.time.tracker.ui.work.day.dto.WorkLogDto
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Service
 class WorkDayService @Autowired constructor(
     private val workDayJpaRepository: WorkDayJpaRepository,
     private val jiraService: JiraService
 ) {
-
-    var TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm")
-        .withZone(ZoneId.systemDefault())
 
     @Transactional(readOnly = true)
     fun allWorkDays(): List<WorkDayDto> =
@@ -133,19 +127,12 @@ class WorkDayService @Autowired constructor(
                     WorkLogDto(
                         it.id,
                         it.jiraId,
-                        timeString(it.started),
-                        timeString(it.ended),
+                        formatTime(it.started),
+                        formatTime(it.ended),
                         workDay.workLogDuration(it),
                         it.jiraName,
                         it.comment,
                         it.status.name
                     )
                 })
-
-    private fun timeString(instatnt: Instant?): String? {
-        if (instatnt != null) {
-            return TIME_FORMATTER.format(instatnt)
-        }
-        return StringUtils.EMPTY
-    }
 }
