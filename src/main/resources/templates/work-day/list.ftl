@@ -27,6 +27,7 @@
             <table class="table table-striped">
                 <thead class="thead-dark">
                 <tr>
+                    <th></th>
                     <th>#</th>
                     <th>Day</th>
                     <th>Duration</th>
@@ -38,6 +39,7 @@
                 <tbody>
                 <#list workDays as workDay>
                     <tr>
+                        <td class="<#if workDay.state == "EXPORTED">bg-success text-white <#elseif workDay.state == "IN_PROGRSS">bg-primary text-white</#if>" ></td>
                         <td>${workDay_index +1}</td>
                         <td>${workDay.date?html}</td>
                         <td class="text-center"><#if workDay.duration??>${workDay.duration}m<br>(${(workDay.duration/60)?floor}h ${workDay.duration - ((workDay.duration/60)?floor * 60)}m)</#if> </td>

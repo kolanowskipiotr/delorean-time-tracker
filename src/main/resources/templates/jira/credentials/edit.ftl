@@ -15,7 +15,7 @@
         <#if connectionResult?? >
             <div class="alert <#if connectionResult.success == true >alert-success<#else>alert-danger</#if>" role="alert">
                 <h4 class="alert-heading"><#if connectionResult.success == true >Success!<#else>Error!</#if></h4>
-                <p>${connectionResult.message}</p>
+                <p>${connectionResult.value}</p>
             </div>
         </#if>
         <div class="card-body">

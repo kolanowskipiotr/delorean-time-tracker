@@ -12,6 +12,13 @@
         <a class="btn btn-outline-success" href="/work-day/edit?workDayId=${workDayId?c}" role="button">📅 Work day</a>
     </nav>
 
+    <#if connectionResult?? >
+        <div class="alert <#if connectionResult.success == true >alert-success<#else>alert-danger</#if>" role="alert">
+            <h4 class="alert-heading"><#if connectionResult.success == true >Success!<#else>Error!</#if></h4>
+            <p>${connectionResult.value}</p>
+        </div>
+    </#if>
+
     <div class="card">
         <div class="card-body">
             <form action="/jira/issue/search" method="get">

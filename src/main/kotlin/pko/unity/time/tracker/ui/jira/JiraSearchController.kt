@@ -6,12 +6,12 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import pko.unity.time.tracker.application.WorkDayService
-import pko.unity.time.tracker.infrastructure.JiraRepository
+import pko.unity.time.tracker.infrastructure.JiraService
 
 @Controller
 @RequestMapping("/jira/issue/search")
 class JiraSearchController(
-    private val jiraRepository: JiraRepository,
+    private val jiraService: JiraService,
     private val workDayService: WorkDayService
 ) {
 
@@ -21,13 +21,17 @@ class JiraSearchController(
         @RequestParam(name = "query", required = false) query: String?,
         model: Model
     ): String {
-        model.addAttribute("jiraUrl", jiraRepository.credentials()?.jiraUrl)
+        model.addAttribute("jiraUrl", jiraService.credentials()?.jiraUrl)
         model.addAttribute("workDayId", workDayId)
         if(query == null) {
             model.addAttribute("jiraIssues", workDayService.lastUsedIssues())
         } else {
             model.addAttribute("query", query)
-            model.addAttribute("jiraIssues", jiraRepository.findJiraIssues(query))
+            val jiraSearchResult = jiraService.findJiraIssues(query)
+            model.addAttribute("jiraIssues", jiraSearchResult.value)
+            if(!jiraSearchResult.success) {
+                model.addAttribute("connectionResult", JiraService.ConnectionResult.error(jiraSearchResult.message))
+            }
         }
         return URL
     }

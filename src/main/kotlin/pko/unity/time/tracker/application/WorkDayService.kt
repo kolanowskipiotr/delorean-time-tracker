@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import pko.unity.time.tracker.domain.WorkDay
+import pko.unity.time.tracker.infrastructure.JiraService
+import pko.unity.time.tracker.infrastructure.JiraService.ConnectionResult
 import pko.unity.time.tracker.infrastructure.WorkDayJpaRepository
 import pko.unity.time.tracker.ui.jira.dto.JiraIssueDto
 import pko.unity.time.tracker.ui.work.day.dto.WorkDayDto
@@ -16,7 +18,8 @@ import java.time.format.DateTimeFormatter
 
 @Service
 class WorkDayService @Autowired constructor(
-    private val workDayJpaRepository: WorkDayJpaRepository
+    private val workDayJpaRepository: WorkDayJpaRepository,
+    private val jiraService: JiraService
 ) {
 
     var TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm")
@@ -29,10 +32,15 @@ class WorkDayService @Autowired constructor(
             .sortedByDescending { it.date }
 
     @Transactional(readOnly = true)
+    fun getWorkDay(workDayId: Long): WorkDayDto? =
+        workDayJpaRepository.getOne(workDayId)
+            .let { convertToDto(it) }
+
+    @Transactional(readOnly = true)
     fun workLogInConflictIds(workDayId: Long): Set<Long> =
         workDayJpaRepository.getOne(workDayId).workLogInConflictIds()
 
-
+    @Transactional(readOnly = true)
     fun lastUsedIssues(): List<JiraIssueDto> {
         val issues = workDayJpaRepository.findAll()
             .flatMap { it.workLogs }
@@ -53,10 +61,6 @@ class WorkDayService @Autowired constructor(
             workDayJpaRepository.findAllById(listOf(workDayId))
         )
     }
-
-    fun getWorkDay(workDayId: Long): WorkDayDto? =
-        workDayJpaRepository.getOne(workDayId)
-            .let { convertToDto(it) }
 
     @Transactional
     fun updateWorkDay(workDayId: Long, date: LocalDate) {
@@ -100,10 +104,21 @@ class WorkDayService @Autowired constructor(
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
+    @Transactional
     fun continueWorkLog(workDayId: Long, workLogId: Long) {
         val workDay = workDayJpaRepository.getOne(workDayId)
         workDay.continueTracking(workLogId);
         workDayJpaRepository.saveAndFlush(workDay)
+    }
+
+    @Transactional
+    fun exportWorkDay(workDayId: Long): ConnectionResult<List<Long>> {
+        val workDay = workDayJpaRepository.getOne(workDayId)
+        workDay.stopTracking()
+        val exportStatus = jiraService.exportWorkDay(workDay.unexportedWorkLogs)
+        workDay.markExported(exportStatus.value.orEmpty())
+        workDayJpaRepository.saveAndFlush(workDay)
+        return exportStatus
     }
 
     private fun convertToDto(workDay: WorkDay) =

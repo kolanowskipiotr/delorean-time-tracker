@@ -1,7 +1,6 @@
 package pko.unity.time.tracker.ui.work.day.dto
 
 import org.springframework.format.annotation.DateTimeFormat
-import pko.unity.time.tracker.domain.WorkLog
 import java.time.LocalDate
 
 data class WorkDayDto(

@@ -3,15 +3,22 @@ package pko.unity.time.tracker.ui.work.day
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import pko.unity.time.tracker.application.WorkDayService
+import pko.unity.time.tracker.infrastructure.JiraService
 import pko.unity.time.tracker.ui.work.day.dto.WorkLogDto
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 
 @Controller
 @RequestMapping("/work-day")
 class WorkDayEditController(
-    private val workDayService: WorkDayService
+    private val workDayService: WorkDayService,
+    private val jiraService: JiraService
 ) {
 
     @GetMapping("/edit")
@@ -23,16 +30,28 @@ class WorkDayEditController(
         @RequestParam(name = "searchedJiraIssueComment", required = false) searchedJiraIssueComment: String?,
         @RequestParam(name = "searchedWorkLogStart", required = false) searchedWorkLogStart: String?,
         @RequestParam(name = "searchedWorkLogEnd", required = false) searchedWorkLogEnd: String?,
+        @RequestParam(name = "success", required = false) success: Boolean?,
+        @RequestParam(name = "message", required = false) message: String?,
         model: Model
     ): String {
         model.addAttribute("workDay", workDayService.getWorkDay(workDayId))
+
+        model.addAttribute("jiraUrl", jiraService.credentials()?.jiraUrl)
         model.addAttribute("searchedWorkLogId", searchedWorkLogId)
         model.addAttribute("searchedJiraIssueId", searchedJiraIssueId)
         model.addAttribute("searchedJiraIssueName", searchedJiraIssueName)
         model.addAttribute("searchedJiraIssueComment", searchedJiraIssueComment)
         model.addAttribute("searchedWorkLogStart", searchedWorkLogStart)
         model.addAttribute("searchedWorkLogEnd", searchedWorkLogEnd)
+
         model.addAttribute("workLogIdsInConflict", workDayService.workLogInConflictIds(workDayId))
+
+        if(success != null) {
+            model.addAttribute("connectionResult",
+                if (success) JiraService.ConnectionResult.success(message)
+                else JiraService.ConnectionResult.error(message)
+            )
+        }
         return URL
     }
 
@@ -49,6 +68,13 @@ class WorkDayEditController(
     fun stopWorkDay(@RequestParam(name = "workDayId") workDayId: Long): String {
         workDayService.stopWorklog(workDayId)
         return "redirect:$URL?workDayId=$workDayId"
+    }
+
+    @GetMapping("/export")//FIXME: This should be Patch
+    fun exportWorkDay(@RequestParam(name = "workDayId") workDayId: Long): String {
+        val exportStatus = workDayService.exportWorkDay(workDayId)
+        val urlEncodedMessage = URLEncoder.encode(exportStatus.message?:"Error", StandardCharsets.UTF_8.toString())
+        return "redirect:$URL?workDayId=$workDayId&success=${exportStatus.success}&message=$urlEncodedMessage"
     }
 
     @PostMapping("/work-log")

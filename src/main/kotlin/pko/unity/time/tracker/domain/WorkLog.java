@@ -9,8 +9,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static org.apache.commons.lang3.StringUtils.substringBefore;
-import static pko.unity.time.tracker.domain.WorkDayStatus.IN_PROGRSS;
-import static pko.unity.time.tracker.domain.WorkDayStatus.STOPED;
+import static pko.unity.time.tracker.domain.WorkDayStatus.*;
 
 /**
  * A WorkLog.
@@ -51,11 +50,19 @@ public class WorkLog implements Serializable {
     @Column(name = "status")
     private WorkDayStatus status;
 
-    //Hibernate nied this
+    //Hibernate need this
     public WorkLog() {
     }
 
-    public WorkLog(WorkDay workDay, Instant started, Instant ended, String jiraIssueId, String jiraIssueName, String jiraIssueComment, Instant endOfDay) {
+    public WorkLog(
+            WorkDay workDay,
+            Instant started,
+            Instant ended,
+            String jiraIssueId,
+            String jiraIssueName,
+            String jiraIssueComment,
+            Instant endOfDay
+    ) {
         this.workDay = workDay;
         updateState(started, ended, jiraIssueId, jiraIssueName, jiraIssueComment, endOfDay);
     }
@@ -81,6 +88,10 @@ public class WorkLog implements Serializable {
         return status;
     }
 
+    public void markExported() {
+        this.status = EXPORTED;
+    }
+
     public String getJiraId() {
         return jiraId;
     }
@@ -96,6 +107,7 @@ public class WorkLog implements Serializable {
     public String getComment() {
         return comment;
     }
+
 
     public Instant getStarted() {
         return started;

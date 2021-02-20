@@ -1,5 +1,6 @@
 package pko.unity.time.tracker.domain;
 
+import pko.unity.time.tracker.domain.dto.ExportableWorkLog;
 import pko.unity.time.tracker.ui.work.day.dto.WorkLogDto;
 
 import javax.persistence.*;
@@ -7,8 +8,6 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,8 +16,10 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static pko.unity.time.tracker.domain.WorkDayStatus.*;
+import static pko.unity.time.tracker.kernel.Utils.Companion;
 
 /**
  * A WorkDay.
@@ -28,8 +29,6 @@ import static pko.unity.time.tracker.domain.WorkDayStatus.*;
 public class WorkDay implements Serializable {
 
     private static final long serialVersionUID = 2915958533629303136L;
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm")
-            .withZone(ZoneId.systemDefault());
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGenerator")
@@ -51,7 +50,6 @@ public class WorkDay implements Serializable {
         this.createDate = createDate;
     }
 
-    // jhipster-needle-entity-add-field - JHipster will add fields here
     public Long getId() {
         return id;
     }
@@ -62,6 +60,21 @@ public class WorkDay implements Serializable {
 
     public Set<WorkLog> getWorkLogs() {
         return workLogs;
+    }
+
+    public Set<ExportableWorkLog> getUnexportedWorkLogs() {
+        return this.workLogs.stream()
+                .filter(workLog -> !workLog.getStatus().equals(EXPORTED))
+                .filter(workLog -> workLog.getDuration() > 0)
+                .map(workLog -> new ExportableWorkLog(workLog, buildExportComment(workLog), createDate))
+                .collect(Collectors.toSet());
+    }
+
+    private String buildExportComment(WorkLog worklog) {
+        return defaultString(worklog.getComment()) + " "
+                + Companion.getDATE_FORMATTER().format(createDate) + ", "
+                + Companion.getTIME_FORMATTER().format(worklog.getStarted()) + "-" + Companion.getTIME_FORMATTER().format(worklog.getEnded()) + " "
+                + "(" + worklog.getDuration() +  "m)";
     }
 
     public Long getDuration() {
@@ -98,8 +111,14 @@ public class WorkDay implements Serializable {
         return IN_PROGRSS;
     }
 
+    public void markExported(List<Long> exportedIds) {
+        this.workLogs.stream()
+                .filter(workLog -> exportedIds.contains(workLog.getId()))
+                .forEach(WorkLog::markExported);
+    }
+
     public void stopTracking() {
-        Instant now = buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES));
+        Instant now = Companion.buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES));
         endWorklogs(now);
     }
 
@@ -111,7 +130,7 @@ public class WorkDay implements Serializable {
     }
 
     public void startTracking(long workLogId) {
-        Instant now = buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES));
+        Instant now = Companion.buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES));
         List<WorkLog> workLogsToCopy = this.workLogs.stream()
                 .filter(workLog -> workLog.getId().equals(workLogId))
                 .collect(Collectors.toList());
@@ -119,7 +138,7 @@ public class WorkDay implements Serializable {
                 new WorkLogDto(
                     null,
                     it.getJiraId(),
-                    TIME_FORMATTER.format(now),
+                    Companion.getTIME_FORMATTER().format(now),
                     null,
                     null,
                     it.getJiraName(),
@@ -129,8 +148,8 @@ public class WorkDay implements Serializable {
 
     public void editWorkLog(WorkLogDto workLogDto) {
         Optional<Instant> startAt = modifyWorkloads(workLogDto);
-        Instant ended = isBlank(workLogDto.getEnded()) ? null : buildDateTimeInstant(this.createDate, workLogDto.getEnded());
-        Instant endOfDay = buildDateTimeInstantEndOfDay(this.createDate);
+        Instant ended = isBlank(workLogDto.getEnded()) ? null : Companion.buildDateTimeInstant(this.createDate, workLogDto.getEnded());
+        Instant endOfDay = Companion.buildDateTimeInstantEndOfDay(this.createDate);
 
         startAt.ifPresent(started -> this.workLogs.stream()
                 .filter(workLog -> workLog.getId().equals(workLogDto.getId()))
@@ -152,22 +171,22 @@ public class WorkDay implements Serializable {
                 it,
                 isBlank(workLogDto.getEnded())
                         ? null
-                        : buildDateTimeInstant(this.createDate, workLogDto.getEnded()),
+                        : Companion.buildDateTimeInstant(this.createDate, workLogDto.getEnded()),
                 workLogDto.getJiraIssiueId(),
                 workLogDto.getJiraIssiueName(),
                 workLogDto.getJiraIssiueComment(),
-                buildDateTimeInstantEndOfDay(this.createDate)))
+                Companion.buildDateTimeInstantEndOfDay(this.createDate)))
                 .ifPresent(workLogs::add);
     }
 
     private Optional<Instant> modifyWorkloads(WorkLogDto workLogDto) {
         Instant now = now().truncatedTo(MINUTES);
         Instant started = isBlank(workLogDto.getStarted())
-                ? buildDateTimeInstant(this.createDate, now)
-                : buildDateTimeInstant(this.createDate, workLogDto.getStarted());
+                ? Companion.buildDateTimeInstant(this.createDate, now)
+                : Companion.buildDateTimeInstant(this.createDate, workLogDto.getStarted());
         Instant ended = isBlank(workLogDto.getEnded())
-                ? buildDateTimeInstantEndOfDay(this.createDate)
-                : buildDateTimeInstant(this.createDate, workLogDto.getEnded());
+                ? Companion.buildDateTimeInstantEndOfDay(this.createDate)
+                : Companion.buildDateTimeInstant(this.createDate, workLogDto.getEnded());
 
         if (started.isBefore(ended)) {
             if (isBlank(workLogDto.getEnded())) {
@@ -212,11 +231,11 @@ public class WorkDay implements Serializable {
     }
 
     private Instant endedOrEndOfDay(WorkLog workLog) {
-        return workLog.isEnded() ? workLog.getEnded() : buildDateTimeInstantEndOfDay(this.createDate);
+        return workLog.isEnded() ? workLog.getEnded() : Companion.buildDateTimeInstantEndOfDay(this.createDate);
     }
 
     private void endWorklogs(Instant ended) {
-        Instant endOfDay = buildDateTimeInstantEndOfDay(this.createDate);
+        Instant endOfDay = Companion.buildDateTimeInstantEndOfDay(this.createDate);
         this.workLogs.stream()
                 .filter(WorkLog::isNotEnded)
                 .forEach(it -> it.end(ended, endOfDay));
@@ -226,33 +245,6 @@ public class WorkDay implements Serializable {
         return this.workLogs.stream()
                 .filter(it -> !it.getId().equals(idToExclude))
                 .anyMatch(it -> started.isBefore(it.getStarted()) && ended.isAfter(endedOrEndOfDay(it)));
-    }
-
-    private Instant buildDateTimeInstant(LocalDate date, Instant time) {
-        Instant started = date.atStartOfDay().atZone(ZoneId.systemDefault())
-                .withHour(time.atZone(ZoneId.systemDefault()).getHour())
-                .withMinute(time.atZone(ZoneId.systemDefault()).getMinute())
-                .toInstant();
-        return started;
-    }
-
-    private Instant buildDateTimeInstant(LocalDate date, String time) {
-        List<Integer> timeParts = Arrays.stream(time.trim().split(":")).
-                map(it -> Integer.parseInt(it))
-                .collect(Collectors.toList());
-        Instant started = date.atStartOfDay().atZone(ZoneId.systemDefault())
-                .withHour(timeParts.get(0))
-                .withMinute(timeParts.get(1))
-                .toInstant();
-        return started;
-    }
-
-    private Instant buildDateTimeInstantEndOfDay(LocalDate date) {
-        Instant started = date.atStartOfDay().atZone(ZoneId.systemDefault())
-                .withHour(23)
-                .withMinute(59)
-                .toInstant();
-        return started;
     }
 
     public void removeWorkLog(long workLogId) {

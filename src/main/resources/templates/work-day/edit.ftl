@@ -10,6 +10,14 @@
         <a class="navbar-brand">Navigation</a>
         <a class="btn btn-outline-success" href="/work-day/list" role="button">📅 Work days</a>
     </nav>
+
+    <#if connectionResult?? >
+        <div class="alert <#if connectionResult.success == true >alert-success<#else>alert-danger</#if>" role="alert">
+            <h4 class="alert-heading"><#if connectionResult.success == true >Success!<#else>Error!</#if></h4>
+            <p>${connectionResult.value}</p>
+        </div>
+    </#if>
+
     <div class="card">
         <div class="card-body">
             <form action="/work-day/edit" method="post">
@@ -23,7 +31,7 @@
                 <div class="form-inline">
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary">💾 Chanege date</button>
-                        <a class="ml-2 btn btn-primary" href="#" role="button">📨 Export to JIRA</a>
+                        <a class="ml-2 btn btn-primary" href="/work-day/export?workDayId=${workDay.id?c}" role="button">📨 Export to JIRA</a>
                         <a class="ml-2 btn btn-danger" href="/work-day/stop?workDayId=${workDay.id?c}" role="button">⏹️ Stop tracking</a>
                     </div>
                 </div>

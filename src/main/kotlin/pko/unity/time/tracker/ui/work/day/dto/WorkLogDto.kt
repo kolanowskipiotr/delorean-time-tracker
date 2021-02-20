@@ -1,9 +1,5 @@
 package pko.unity.time.tracker.ui.work.day.dto
 
-import org.springframework.format.annotation.DateTimeFormat
-import java.time.Instant
-import java.time.LocalDate
-
 data class WorkLogDto(
     val id: Long? = null,
     val jiraIssiueId: String,
