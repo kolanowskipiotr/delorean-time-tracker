@@ -7,9 +7,11 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static pko.unity.time.tracker.domain.WorkDayStatus.*;
+import static pko.unity.time.tracker.kernel.Utils.Companion;
 
 /**
  * A WorkLog.
@@ -171,6 +173,13 @@ public class WorkLog implements Serializable {
     @Override
     public int hashCode() {
         return 31;
+    }
+
+    void changeDate(LocalDate date) {
+        this.started = Companion.buildDateTimeInstant(date, this.started);
+        if(isEnded()) {
+            this.ended = Companion.buildDateTimeInstant(date, this.ended);
+        }
     }
 
     // prettier-ignore

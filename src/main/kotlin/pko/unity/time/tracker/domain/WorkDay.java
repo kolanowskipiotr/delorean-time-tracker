@@ -102,7 +102,9 @@ public class WorkDay implements Serializable {
 
     public void update(LocalDate date) {
         this.createDate = date;
-        //TODO change day in all Instants in workDays
+        this.workLogs.forEach(
+                workLog -> workLog.changeDate(date)
+        );
     }
 
     public WorkDayStatus getStatus() {
