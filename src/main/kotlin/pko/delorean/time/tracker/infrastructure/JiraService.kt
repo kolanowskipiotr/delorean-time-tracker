@@ -71,12 +71,12 @@ class JiraService {
         this.jiraCredentials
 
     fun findJiraIssues(userQuery: String): ConnectionResult<List<JiraIssueDto>> {
-        var soundJiraIssues = listOf<JiraIssueDto>()
+        var foundJiraIssues = listOf<JiraIssueDto>()
         try {
             val jiraClient = buildJiraClient()
             val jiraQuery = buildJiraQuery(jiraClient, userQuery)
             val searchClient = jiraClient.searchClient
-            soundJiraIssues = searchByIssueKey(searchClient, userQuery)
+            foundJiraIssues = searchByIssueKey(searchClient, userQuery)
                 .plus(searchClient.searchJql(jiraQuery).claim().issues)
                 .map { JiraIssueDto(it.key, it.summary) }
             jiraClient.close()
@@ -84,7 +84,7 @@ class JiraService {
             logger.error(e.message, e)
             return ConnectionResult.error(listOf(), e.toString() + defaultString(e.message))
         }
-        return ConnectionResult.success(soundJiraIssues)
+        return ConnectionResult.success(foundJiraIssues)
     }
 
     @Cacheable("getAllIssiueTypes")
