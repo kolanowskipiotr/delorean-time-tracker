@@ -49,7 +49,7 @@
                                     <#list workDay.statistics?keys as key>
                                         <li>
                                             <#assign val=workDay.statistics[key]/>
-                                            ${key} - <#if val??> ${val/workDay.duration*100}% - ${val}m (${(val/60)?floor}h ${val - ((val/60)?floor * 60)}m)</#if>
+                                            ${key} - <#if val?? && workDay.duration gt 0> ${val/workDay.duration*100}% - ${val}m (${(val/60)?floor}h ${val - ((val/60)?floor * 60)}m)<#else>0% - 0m (0h 0m)</#if>
                                         </li>
                                     </#list>
                                 </ul>
