@@ -4,7 +4,7 @@
 
 ## How to run
 ### Download latest version
-https://github.com/kolanowskipiotr/delorean-time-tracker/releases/tag/release-0.0.1
+https://github.com/kolanowskipiotr/delorean-time-tracker/releases
 ### Run on Windows
 Use `run.bat`.
 ### Run on Linux
