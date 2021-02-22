@@ -47,7 +47,7 @@ class JiraService {
             restClient.close()
         } catch (e: Exception) { //FIXME: Catch only important exceptions
             logger.error(e.message, e)
-            return ConnectionResult.error(e.toString() + defaultString(e.message))
+            return ConnectionResult.error(e.toString() + defaultString(e.message, e.javaClass.name))
         }
         return ConnectionResult.success(serverInfo.toString())
     }
@@ -62,9 +62,15 @@ class JiraService {
             restClient.close()
         } catch (e: Exception) { //FIXME: Catch only important exceptions
             logger.error(e.message, e)
-            return ConnectionResult.error(exportedWorkLogIds, e.toString() + defaultString(e.message))
+            return ConnectionResult.error(exportedWorkLogIds, e.toString() + defaultString(e.message, e.javaClass.name))
         }
-        return ConnectionResult.success(exportedWorkLogIds)
+        return ConnectionResult.success(
+            exportedWorkLogIds,
+            exportableWorkLogs
+                .filter { exportableWorkLog -> exportedWorkLogIds.contains(exportableWorkLog.worklog.id) }
+                .map { "${it.worklog.jiraId} - ${it.comment}" }
+                .joinToString("<br>" )
+        )
     }
 
     fun credentials(): JiraCredentialsDto? =
@@ -82,7 +88,7 @@ class JiraService {
             jiraClient.close()
         } catch (e: Exception) { //FIXME: Catch only important exceptions
             logger.error(e.message, e)
-            return ConnectionResult.error(listOf(), e.toString() + defaultString(e.message))
+            return ConnectionResult.error(listOf(), e.toString() + defaultString(e.message, e.javaClass.name))
         }
         return ConnectionResult.success(foundJiraIssues)
     }

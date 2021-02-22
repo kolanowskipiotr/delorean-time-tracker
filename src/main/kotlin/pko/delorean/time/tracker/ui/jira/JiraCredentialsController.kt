@@ -37,7 +37,7 @@ class JiraCredentialsController(
     fun updateCredentials(jiraCredentialsDto: JiraCredentialsDto): String {
         jiraService.updateCredential(jiraCredentialsDto)
         val connectionResult = jiraService.findJiraServerInfo()
-        val urlEncodedMessage = URLEncoder.encode(connectionResult.message?:"Error", StandardCharsets.UTF_8.toString())
+        val urlEncodedMessage = URLEncoder.encode(connectionResult.value?:"", StandardCharsets.UTF_8.toString())
         return "redirect:$URL?success=${connectionResult.success}&message=$urlEncodedMessage"
     }
 
