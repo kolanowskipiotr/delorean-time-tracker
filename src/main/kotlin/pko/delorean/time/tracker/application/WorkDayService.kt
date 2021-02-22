@@ -115,6 +115,13 @@ class WorkDayService @Autowired constructor(
         return exportStatus
     }
 
+    @Transactional
+    fun toggleExport(workDayId: Long, workLogId: Long) {
+        val workDay = workDayJpaRepository.getOne(workDayId)
+        workDay.toggleExport(workLogId);
+        workDayJpaRepository.saveAndFlush(workDay)
+    }
+
     private fun convertToDto(workDay: WorkDay) =
         WorkDayDto(
             workDay.id,

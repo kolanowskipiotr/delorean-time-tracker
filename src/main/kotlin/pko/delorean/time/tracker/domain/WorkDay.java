@@ -65,7 +65,7 @@ public class WorkDay implements Serializable {
 
     public Set<ExportableWorkLog> getUnexportedWorkLogs() {
         return this.workLogs.stream()
-                .filter(workLog -> !workLog.getStatus().equals(EXPORTED))
+                .filter(workLog -> workLog.isUnexported())
                 .filter(workLog -> workLogDuration(workLog) > 0)
                 .map(workLog -> new ExportableWorkLog(workLog, buildExportComment(workLog), createDate))
                 .collect(Collectors.toSet());
@@ -110,6 +110,19 @@ public class WorkDay implements Serializable {
         this.workLogs.forEach(
                 workLog -> workLog.changeDate(date)
         );
+    }
+
+
+    public void toggleExport(long workLogId) {
+        this.workLogs.stream()
+                .filter(workLog -> workLog.getId().equals(workLogId))
+                .forEach(workLog -> {
+                    if (workLog.isExported()) {
+                        workLog.markUnexported();
+                    } else {
+                        workLog.markExported();
+                    }
+                });
     }
 
     public void markExported(List<Long> exportedIds) {

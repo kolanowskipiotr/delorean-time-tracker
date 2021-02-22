@@ -30,6 +30,7 @@ class WorkDayEditController(
         @RequestParam(name = "searchedJiraIssueComment", required = false) searchedJiraIssueComment: String?,
         @RequestParam(name = "searchedWorkLogStart", required = false) searchedWorkLogStart: String?,
         @RequestParam(name = "searchedWorkLogEnd", required = false) searchedWorkLogEnd: String?,
+        @RequestParam(name = "searchedWorkLogStatus", required = false) searchedWorkLogStatus: String?,
         @RequestParam(name = "success", required = false) success: Boolean?,
         @RequestParam(name = "message", required = false) message: String?,
         model: Model
@@ -43,6 +44,7 @@ class WorkDayEditController(
         model.addAttribute("searchedJiraIssueComment", searchedJiraIssueComment)
         model.addAttribute("searchedWorkLogStart", searchedWorkLogStart)
         model.addAttribute("searchedWorkLogEnd", searchedWorkLogEnd)
+        model.addAttribute("searchedWorkLogStatus", searchedWorkLogStatus)
 
         model.addAttribute("workLogIdsInConflict", workDayService.workLogInConflictIds(workDayId))
 
@@ -104,7 +106,7 @@ class WorkDayEditController(
         return "redirect:$URL?workDayId=$workDayId"
     }
 
-    @GetMapping("/work-log/start")
+    @GetMapping("/work-log/start")//FIXME: This should be Patch
     fun startWorkLog(
         @RequestParam(name = "workDayId") workDayId: Long,
         @RequestParam(name = "workLogId") workLogId: Long
@@ -112,12 +114,22 @@ class WorkDayEditController(
         workDayService.startWorkLog(workDayId, workLogId)
         return "redirect:$URL?workDayId=$workDayId"
     }
-    @GetMapping("/work-log/continue")
+
+    @GetMapping("/work-log/continue")//FIXME: This should be Patch
     fun continueWorkLog(
         @RequestParam(name = "workDayId") workDayId: Long,
         @RequestParam(name = "workLogId") workLogId: Long
     ): String {
         workDayService.continueWorkLog(workDayId, workLogId)
+        return "redirect:$URL?workDayId=$workDayId"
+    }
+
+    @GetMapping("/work-log/export/toggle")//FIXME: This should be Patch
+    fun toggleExportWorkLog(
+        @RequestParam(name = "workDayId") workDayId: Long,
+        @RequestParam(name = "workLogId") workLogId: Long
+    ): String {
+        workDayService.toggleExport(workDayId, workLogId)
         return "redirect:$URL?workDayId=$workDayId"
     }
 

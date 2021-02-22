@@ -31,7 +31,7 @@
                 <div class="form-inline">
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary">💾 Chanege date</button>
-                        <a class="ml-2 btn btn-primary" href="/work-day/export?workDayId=${workDay.id?c}" role="button">📨 Export to JIRA</a>
+                        <a class="ml-2 btn btn-primary" href="/work-day/export?workDayId=${workDay.id?c}" role="button">📤 Export to JIRA</a>
                         <a class="ml-2 btn btn-danger" href="/work-day/stop?workDayId=${workDay.id?c}" role="button">⏹️ Stop tracking</a>
                     </div>
                 </div>
@@ -65,6 +65,7 @@
                             <button type="submit" class="btn btn-primary">💾 Save</button>
                             <a class="ml-2 btn btn-primary" href="/work-day/work-log/start?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button">▶ Start new like this</a>
                             <a class="ml-2 btn btn-primary<#if !workDay.workLogs?has_content || workDay.workLogs?last.id != searchedWorkLogId> disabled</#if>" href="/work-day/work-log/continue?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button">➡ Continue</a>
+                            <a class="ml-2 btn btn-primary" href="/work-day/work-log/export/toggle?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button"><#if searchedWorkLogStatus == "EXPORTED">🔓 Enable export to JIRA<#else>🔒 Disable export to JIRA</#if></a>
                             <a class="ml-2 btn btn-warning" href="/work-day/edit?workDayId=${workDay.id?c}" role="button">❌️ Cancel</a>
                         </div>
                     </div>
@@ -109,7 +110,7 @@
                                 <td>
                                     <div class="btn-toolbar" role="toolbar">
                                         <div class="btn-group mr-2" role="group">
-                                            <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId}&searchedJiraIssueName=${workLog.jiraIssiueName}&searchedJiraIssueComment=${workLog.jiraIssiueComment!}&searchedWorkLogStart=${workLog.started!?html}&searchedWorkLogEnd=${workLog.ended!?html}" role="button">✏️ Edit</a>
+                                            <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId}&searchedJiraIssueName=${workLog.jiraIssiueName}&searchedJiraIssueComment=${workLog.jiraIssiueComment!}&searchedWorkLogStart=${workLog.started!?html}&searchedWorkLogEnd=${workLog.ended!?html}&searchedWorkLogStatus=${workLog.status!?html}" role="button">✏️ Edit</a>
                                         </div>
                                         <div class="btn-group mr-2" role="group">
                                             <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "btn btn-danger" "/work-day/work-log/delete" "🗑️ Delete" />

@@ -79,6 +79,21 @@ public class WorkLog implements Serializable {
     public void markExported() {
         this.status = WorkDayStatus.EXPORTED;
     }
+    public void markUnexported() {
+        if(this.isEnded()){
+            this.status = WorkDayStatus.STOPPED;
+        } else {
+            this.status = WorkDayStatus.IN_PROGRESS;
+        }
+    }
+
+    public boolean isExported() {
+        return this.status == WorkDayStatus.EXPORTED;
+    }
+
+    public boolean isUnexported() {
+        return !isExported();
+    }
 
     public String getJiraId() {
         return jiraId;
