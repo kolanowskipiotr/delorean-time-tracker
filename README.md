@@ -15,7 +15,7 @@ Use `run.bat`.
 1. mvn package
 1. copy `target\delorean-time-tracke-{VERSION}.jar` to deploy place
 1. copy `run.bat` to deploy place
-1. copy `run-first-time` to deploy place
+1. copy `run-first-time.bat` to deploy place
 1. copy `src\main\resources\application.properties` to deploy place
 1. copy `README.md` to deploy place
 1. change `{VERSION}` in `run.bat`, `run-first-time.bat` files
