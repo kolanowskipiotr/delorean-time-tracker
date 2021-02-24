@@ -40,7 +40,7 @@
     </div>
 
     <div class="card">
-        <div class="card-body">
+        <div class="card-body" id="edit-form">
             <h3 class="card-title">Work log: <a class="btn btn-outline-success" href="/jira/issue/search?workDayId=${workDay.id?c}" role="button">🔍 Search JIRA Issue</a></h3>
 
             <form action="/work-day/work-log<#if searchedWorkLogId??>/edit</#if>" method="post">
@@ -155,3 +155,26 @@
     </div>
 </div> <!-- /container -->
 <#include "/footer.ftl">
+<script>
+    $('document').ready(function(){
+        <#if searchedJiraIssueId?has_content>
+        catchFocus();
+        </#if>
+    });
+
+    function catchFocus() {
+        let glower = $("#edit-form");
+        glower.addClass('active');
+        window.setTimeout(function() {
+            glower.removeClass('active');
+        }, 2000);
+    }
+</script>
+<style>
+    #edit-form.active {
+        border-color: #6c757d;
+        -webkit-box-shadow: 0 0 10px #6c757d;
+        -moz-box-shadow: 0 0 10px #6c757d;
+        box-shadow: 0 0 10px #6c757d;
+    }
+</style>
