@@ -24,8 +24,10 @@ class WorkDayListController (
     @GetMapping("/list")
     fun showTemplates(model: Model, workDaysFilter: WorkDaysFilterForm): String {
         val filters = workDaysFilter.defaultIfNull()
-        model.addAttribute("workDays", workDayService.allWorkDays(filters.createDateStart!!, filters.createDateEnd!!))
+        val workDays = workDayService.findWorkDays(filters.createDateStart!!, filters.createDateEnd!!)
+        model.addAttribute("workDays", workDays)
         model.addAttribute("filters", filters.toDto())
+        model.addAttribute("periodStatistics", workDayService.calculateStatistics(workDays))
             return URL
     }
 

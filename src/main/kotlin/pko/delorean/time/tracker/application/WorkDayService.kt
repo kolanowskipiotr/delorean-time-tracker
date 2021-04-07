@@ -1,8 +1,6 @@
 package pko.delorean.time.tracker.application
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.data.domain.Example
-import org.springframework.data.domain.ExampleMatcher
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -16,8 +14,10 @@ import pko.delorean.time.tracker.kernel.Utils.Companion.formatTime
 import pko.delorean.time.tracker.ui.jira.dto.JiraIssueDto
 import pko.delorean.time.tracker.ui.work.day.dto.IssueSummaryDto
 import pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto
+import pko.delorean.time.tracker.ui.work.day.dto.WorkDaysPeriodStatisticsDto
 import pko.delorean.time.tracker.ui.work.day.dto.WorkLogDto
 import java.time.LocalDate
+import kotlin.collections.Map.Entry
 
 @Service
 class WorkDayService @Autowired constructor(
@@ -26,7 +26,7 @@ class WorkDayService @Autowired constructor(
 ) {
 
     @Transactional(readOnly = true)
-    fun allWorkDays(createDateStart: LocalDate, createDateEnd: LocalDate): List<WorkDayDto> {
+    fun findWorkDays(createDateStart: LocalDate, createDateEnd: LocalDate): List<WorkDayDto> {
         return workDayJpaRepository.findAllByCreateDateBetween(createDateStart, createDateEnd)
                 .map { it.toDto() }
                 .sortedByDescending { it.date }
@@ -133,6 +133,14 @@ class WorkDayService @Autowired constructor(
         val workDay = workDayJpaRepository.getOne(workDayId)
         workDay.toggleExport(workLogId)
         workDayJpaRepository.saveAndFlush(workDay)
+    }
+
+    fun calculateStatistics(workDays: List<WorkDayDto>): WorkDaysPeriodStatisticsDto {
+        val statistics = workDays.flatMap { it.statistics?.entries ?: listOf<Entry<String, Long>>() }
+            .groupBy { it.key }
+            .map { it.key to it.value.map { it.value }.sum() }
+            .toMap()
+        return WorkDaysPeriodStatisticsDto(statistics, statistics.map { it.value }.sum())
     }
 
     private fun WorkDay.toDto() =
