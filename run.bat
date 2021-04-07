@@ -1,2 +1,2 @@
 @ECHO OFF
-start java -jar delorean-time-tracker-1.2.1.jar
+start java -jar delorean-time-tracker-1.2.2-SNAPSHOT.jar
