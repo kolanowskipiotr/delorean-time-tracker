@@ -110,7 +110,7 @@
                                 <td>
                                     <div class="btn-toolbar" role="toolbar">
                                         <div class="btn-group mr-2" role="group">
-                                            <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId}&searchedJiraIssueName=${workLog.jiraIssiueName}&searchedJiraIssueComment=${workLog.jiraIssiueComment!}&searchedWorkLogStart=${workLog.started!?html}&searchedWorkLogEnd=${workLog.ended!?html}&searchedWorkLogStatus=${workLog.status!?html}" role="button">✏️ Edit</a>
+                                            <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}" role="button">✏️ Edit</a>
                                         </div>
                                         <div class="btn-group mr-2" role="group">
                                             <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "btn btn-danger" "/work-day/work-log/delete" "🗑️ Delete" />

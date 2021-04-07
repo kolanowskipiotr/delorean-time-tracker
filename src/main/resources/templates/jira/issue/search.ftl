@@ -48,7 +48,7 @@
                         <td>
                             <div class="btn-toolbar" role="toolbar">
                                 <div class="btn-group mr-2" role="group">
-                                    <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDayId?c}&searchedJiraIssueId=${jiraIssue.jiraId}&searchedJiraIssueName=${jiraIssue.jiraName}&searchedJiraIssueComment=${jiraIssue.comment!}" role="button">✔️ Choose</a>
+                                    <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDayId?c}&searchedJiraIssueId=${jiraIssue.jiraId?url}&searchedJiraIssueName=${jiraIssue.jiraName?url}&searchedJiraIssueComment=${jiraIssue.comment!?url}" role="button">✔️ Choose</a>
                                 </div>
                             </div>
                         </td>
