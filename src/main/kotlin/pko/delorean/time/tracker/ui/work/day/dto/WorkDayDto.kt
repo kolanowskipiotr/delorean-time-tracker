@@ -9,5 +9,6 @@ data class WorkDayDto(
     val state: String? = null,
     val duration: Long? = null,
     val statistics: Map<String, Long>? = null,
+    val summary: List<IssueSummaryDto>? = null,
     val workLogs: List<WorkLogDto>? = null
 )

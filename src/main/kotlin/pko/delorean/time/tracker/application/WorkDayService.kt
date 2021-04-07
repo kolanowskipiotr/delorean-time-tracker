@@ -3,12 +3,15 @@ package pko.delorean.time.tracker.application
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import pko.delorean.time.tracker.domain.IssueSummary
 import pko.delorean.time.tracker.domain.WorkDay
+import pko.delorean.time.tracker.domain.WorkLog
 import pko.delorean.time.tracker.infrastructure.JiraService
 import pko.delorean.time.tracker.infrastructure.JiraService.ConnectionResult
 import pko.delorean.time.tracker.infrastructure.WorkDayJpaRepository
 import pko.delorean.time.tracker.kernel.Utils.Companion.formatTime
 import pko.delorean.time.tracker.ui.jira.dto.JiraIssueDto
+import pko.delorean.time.tracker.ui.work.day.dto.IssueSummaryDto
 import pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto
 import pko.delorean.time.tracker.ui.work.day.dto.WorkLogDto
 import java.time.LocalDate
@@ -129,17 +132,24 @@ class WorkDayService @Autowired constructor(
             workDay.status.name,
             workDay.duration,
             workDay.statistics,
-            workDay.workLogs.sortedBy { it.started }
-                .map {
-                    WorkLogDto(
-                        it.id,
-                        it.jiraId,
-                        formatTime(it.started),
-                        formatTime(it.ended),
-                        workDay.workLogDuration(it),
-                        it.jiraName,
-                        it.comment,
-                        it.status.name
-                    )
-                })
+            workDay.summary.map { it.toDto() },
+            workDay.workLogs
+                .sortedBy { it.started }
+                .map { it.toDto(workDay) }
+        )
+
+    private fun WorkLog.toDto(workDay: WorkDay) =
+        WorkLogDto(
+            id,
+            jiraId,
+            formatTime(started),
+            formatTime(ended),
+            workDay.workLogDuration(this),
+            jiraName,
+            comment,
+            status.name
+        )
+
+    private fun IssueSummary.toDto() =
+        IssueSummaryDto(jiraId, jiraNames, comments)
 }

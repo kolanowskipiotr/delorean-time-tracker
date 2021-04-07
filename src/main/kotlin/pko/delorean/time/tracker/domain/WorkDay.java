@@ -65,7 +65,7 @@ public class WorkDay implements Serializable {
 
     public Set<ExportableWorkLog> getUnexportedWorkLogs() {
         return this.workLogs.stream()
-                .filter(workLog -> workLog.isUnexported())
+                .filter(WorkLog::isUnexported)
                 .filter(workLog -> workLogDuration(workLog) > 0)
                 .map(workLog -> new ExportableWorkLog(workLog, buildExportComment(workLog), createDate))
                 .collect(Collectors.toSet());
@@ -80,12 +80,19 @@ public class WorkDay implements Serializable {
     }
 
     public Map<String, Long> getStatistics() {
-        Map<String, Long> statistics = this.workLogs.stream()
+        return this.workLogs.stream()
                 .collect(groupingBy(WorkLog::getProjectKey))
                 .entrySet().stream()
                 .collect(toMap(Map.Entry::getKey, entry -> sumDurations(entry.getValue())));
+    }
 
-        return statistics;
+    public List<IssueSummary> getSummary() {
+        return this.workLogs.stream()
+                .collect(groupingBy(WorkLog::getJiraId))
+                .entrySet().stream()
+                .map(it -> new IssueSummary(it.getKey(), it.getValue()))
+                .sorted(comparing(IssueSummary::getOrdering))
+                .collect(Collectors.toList());
     }
 
     public WorkDayStatus getStatus() {
