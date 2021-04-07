@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import pko.delorean.time.tracker.application.WorkDayService
 import pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto
+import pko.delorean.time.tracker.ui.work.day.dto.WorkDaysFilterDto
+import pko.delorean.time.tracker.ui.work.day.form.WorkDaysFilterForm
 
 @Controller
 @RequestMapping("/work-day")
@@ -15,10 +17,16 @@ class WorkDayListController (
         private val workDayService: WorkDayService
 ) {
 
+    companion object {
+        const val URL = "/work-day/list"
+    }
+
     @GetMapping("/list")
-    fun showTemplates(model: Model): String {
-        model.addAttribute("workDays", workDayService.allWorkDays())
-        return URL
+    fun showTemplates(model: Model, workDaysFilter: WorkDaysFilterForm): String {
+        val filters = workDaysFilter.defaultIfNull()
+        model.addAttribute("workDays", workDayService.allWorkDays(filters.createDateStart!!, filters.createDateEnd!!))
+        model.addAttribute("filters", filters.toDto())
+            return URL
     }
 
     @PostMapping("/add")
@@ -34,7 +42,6 @@ class WorkDayListController (
         return "redirect:$URL"
     }
 
-    companion object {
-        const val URL = "/work-day/list"
-    }
+    private fun WorkDaysFilterForm.toDto() =
+        WorkDaysFilterDto(createDateStart, createDateEnd)
 }

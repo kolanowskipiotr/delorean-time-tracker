@@ -26,10 +26,11 @@ class WorkDayService @Autowired constructor(
 ) {
 
     @Transactional(readOnly = true)
-    fun allWorkDays(): List<WorkDayDto> =
-        workDayJpaRepository.findAll()
-            .map { it.toDto() }
-            .sortedByDescending { it.date }
+    fun allWorkDays(createDateStart: LocalDate, createDateEnd: LocalDate): List<WorkDayDto> {
+        return workDayJpaRepository.findAllByCreateDateBetween(createDateStart, createDateEnd)
+                .map { it.toDto() }
+                .sortedByDescending { it.date }
+    }
 
     @Transactional(readOnly = true)
     fun getWorkDay(workDayId: Long): WorkDayDto? =
@@ -38,8 +39,8 @@ class WorkDayService @Autowired constructor(
     @Transactional(readOnly = true)
     fun findWorkDayBefore(workDayId: Long): WorkDayDto? {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        return workDayJpaRepository.findAllWithCreateDateBefore(PageRequest.of(0,1), workDay.createDate)
-                .firstOrNull()?.toDto()
+        return workDayJpaRepository.findAllWithCreateDateBefore(PageRequest.of(0, 1), workDay.createDate)
+            .maxBy { it.createDate }?.toDto()
     }
 
     @Transactional(readOnly = true)

@@ -16,14 +16,39 @@
         <div class="card-body">
             <form action="/work-day/add" method="post">
                 <div class="form-inline">
-                    <div class="form-group mb-2">
+                    <div class="form-group mb-2 w-75">
                         <label for="date" class="control-label col-sm-2" >Date: </label>
                         <input type="date" class="form-control" id="date" name="date" placeholder="dd.MM.yyyy" required="required"/>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary mb-2">➕ New work day</button>
             </form>
+        </div>
+    </div>
 
+    <div class="card">
+        <div class="card-body">
+            <form action="/work-day/list" method="get">
+                <div class="form-inline">
+                    <div class="form-group mb-2 w-75">
+                        <label for="date" class="control-label col-sm-2" >Created from: </label>
+                        <input type="date" class="form-control" id="createDateStart" name="createDateStart" placeholder="dd.MM.yyyy" value="${filters.createDateStart!}"/>
+                        <label for="date" class="control-label col-sm-2" >Created to: </label>
+                        <input type="date" class="form-control" id="createDateEnd" name="createDateEnd" placeholder="dd.MM.yyyy" value="${filters.createDateEnd!}"/>
+                    </div>
+                </div>
+                <div class="form-inline">
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary mb-2">🔍 Filter</button>
+                        <a class="mb-2 ml-2 btn btn-warning" href="/work-day/list" role="button">🧹 Clear</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
             <table class="table table-striped">
                 <thead class="thead-dark">
                 <tr>

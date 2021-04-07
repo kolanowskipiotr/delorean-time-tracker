@@ -21,6 +21,15 @@ class WorkDayEditController(
     private val jiraService: JiraService
 ) {
 
+    companion object {
+        private const val WORK_DAY_ID_PARAM = "workDayId"
+
+        const val URL = "/work-day/edit"
+
+        fun editUrl(workDayId: Long) =
+            "$URL?$WORK_DAY_ID_PARAM=$workDayId"
+    }
+
     @GetMapping("/edit")
     fun showWorkDay(
         @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
@@ -132,14 +141,5 @@ class WorkDayEditController(
     ): String {
         workDayService.toggleExport(workDayId, workLogId)
         return "redirect:${editUrl(workDayId)}"
-    }
-
-    companion object {
-        private const val WORK_DAY_ID_PARAM = "workDayId"
-        
-        const val URL = "/work-day/edit"
-        
-        fun editUrl(workDayId: Long) = 
-            "$URL?$WORK_DAY_ID_PARAM=$workDayId"
     }
 }

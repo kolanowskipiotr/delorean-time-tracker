@@ -13,6 +13,10 @@ import java.util.List;
 @Repository
 public interface WorkDayJpaRepository extends JpaRepository<WorkDay, Long> {
 
-    @Query("select a from WorkDay a where a.createDate < :creationDate")
+    List<WorkDay> findAllByCreateDateBetween(
+            LocalDate createDateStart,
+            LocalDate createDateEnd);
+
+    @Query("select a from WorkDay a where a.createDate < :creationDate order by a.createDate DESC ")
     List<WorkDay> findAllWithCreateDateBefore(Pageable pageable, @Param("creationDate") LocalDate creationDate);
 }
