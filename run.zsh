@@ -4,5 +4,5 @@
 
 function dtt {
 	cd /home/pkolanow/personal-workspace/delorean-time-tracker-RELEASES/delorean-time-tracker-1.2.2-SNAPSHOT
-    java -jar delorean-time-tracker-1.2.2-SNAPSHOT.jar
+    java -jar delorean-time-tracker-1.2.2-SNAPSHOT.jar &
 }
