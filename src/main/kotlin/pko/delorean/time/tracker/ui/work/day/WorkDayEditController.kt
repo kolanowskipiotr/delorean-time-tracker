@@ -36,6 +36,7 @@ class WorkDayEditController(
         model: Model
     ): String {
         model.addAttribute("workDay", workDayService.getWorkDay(workDayId))
+        model.addAttribute("workDayBefore", workDayService.findWorkDayBefore(workDayId))
 
         model.addAttribute("jiraUrl", jiraService.credentials()?.jiraUrl)
         model.addAttribute("searchedWorkLogId", searchedWorkLogId)

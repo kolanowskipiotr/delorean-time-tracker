@@ -1,6 +1,9 @@
 package pko.delorean.time.tracker.application
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Example
+import org.springframework.data.domain.ExampleMatcher
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import pko.delorean.time.tracker.domain.IssueSummary
@@ -25,13 +28,19 @@ class WorkDayService @Autowired constructor(
     @Transactional(readOnly = true)
     fun allWorkDays(): List<WorkDayDto> =
         workDayJpaRepository.findAll()
-            .map { convertToDto(it) }
+            .map { it.toDto() }
             .sortedByDescending { it.date }
 
     @Transactional(readOnly = true)
     fun getWorkDay(workDayId: Long): WorkDayDto? =
-        workDayJpaRepository.getOne(workDayId)
-            .let { convertToDto(it) }
+        workDayJpaRepository.getOne(workDayId).toDto()
+
+    @Transactional(readOnly = true)
+    fun findWorkDayBefore(workDayId: Long): WorkDayDto? {
+        val workDay = workDayJpaRepository.getOne(workDayId)
+        return workDayJpaRepository.findAllWithCreateDateBefore(PageRequest.of(0,1), workDay.createDate)
+                .firstOrNull()?.toDto()
+    }
 
     @Transactional(readOnly = true)
     fun workLogInConflictIds(workDayId: Long): Set<Long> =
@@ -62,49 +71,49 @@ class WorkDayService @Autowired constructor(
     @Transactional
     fun updateWorkDay(workDayId: Long, date: LocalDate) {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        workDay.update(date);
+        workDay.update(date)
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
     @Transactional
     fun addWorkLog(workDayId: Long, workLogDto: WorkLogDto) {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        workDay.addWorkLog(workLogDto);
+        workDay.addWorkLog(workLogDto)
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
     @Transactional
     fun editWorkLog(workDayId: Long, workLogDto: WorkLogDto) {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        workDay.editWorkLog(workLogDto);
+        workDay.editWorkLog(workLogDto)
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
     @Transactional
     fun removeWorkLog(workDayId: Long, workLogId: Long) {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        workDay.removeWorkLog(workLogId);
+        workDay.removeWorkLog(workLogId)
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
     @Transactional
     fun stopWorklog(workDayId: Long) {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        workDay.stopTracking();
+        workDay.stopTracking()
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
     @Transactional
     fun startWorkLog(workDayId: Long, workLogId: Long) {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        workDay.startTracking(workLogId);
+        workDay.startTracking(workLogId)
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
     @Transactional
     fun continueWorkLog(workDayId: Long, workLogId: Long) {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        workDay.continueTracking(workLogId);
+        workDay.continueTracking(workLogId)
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
@@ -121,21 +130,21 @@ class WorkDayService @Autowired constructor(
     @Transactional
     fun toggleExport(workDayId: Long, workLogId: Long) {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        workDay.toggleExport(workLogId);
+        workDay.toggleExport(workLogId)
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
-    private fun convertToDto(workDay: WorkDay) =
+    private fun WorkDay.toDto() =
         WorkDayDto(
-            workDay.id,
-            workDay.createDate,
-            workDay.status.name,
-            workDay.duration,
-            workDay.statistics,
-            workDay.summary.map { it.toDto() },
-            workDay.workLogs
+            id,
+            createDate,
+            status.name,
+            duration,
+            statistics,
+            summary.map { it.toDto() },
+            workLogs
                 .sortedBy { it.started }
-                .map { it.toDto(workDay) }
+                .map { it.toDto(this) }
         )
 
     private fun WorkLog.toDto(workDay: WorkDay) =

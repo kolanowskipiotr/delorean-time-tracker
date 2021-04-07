@@ -125,7 +125,6 @@
         </div>
     </div>
 
-
     <div class="card">
         <div class="card-body">
             <h3 class="card-title">Statistics:</h3>
@@ -155,37 +154,45 @@
     </div>
 
 
+    <#macro workDaySummary workDayToPresent>
+        <div class="list-group">
+            <#if workDayToPresent.summary??>
+                <#list workDayToPresent.summary as issueSummary>
+                    <div class="list-group-item list-group-item-action flex-column align-items-start">
+
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1 w-75">
+                                <#list issueSummary.jiraNames as jiraName>
+                                    <ul class="list-group">
+                                        <li class="list-group-item border-0 active">${jiraName?html}</li>
+                                    </ul>
+                                </#list>
+                            </h5>
+                            <small class="text-muted font-weight-bold">
+                                <a href="<#if jiraUrl??>${jiraUrl?html}/browse/${issueSummary.jiraId?url}</#if>" target="_blank">${issueSummary.jiraId?html}</a>
+                            </small>
+                        </div>
+                        <p class="mb-1">
+                            <#list issueSummary.comments as comment>
+                        <ul class="list-group">
+                            <li class="list-group-item">${comment?html}</li>
+                        </ul>
+                        </#list>
+                        </p>
+                    </div>
+                </#list>
+            </#if>
+        </div>
+    </#macro>
     <div class="card">
         <div class="card-body">
             <h3 class="card-title">Summary:</h3>
-            <div class="list-group">
-                <#if workDay.summary??>
-                    <#list workDay.summary as issueSummary>
-                        <div class="list-group-item list-group-item-action flex-column align-items-start">
-
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1 w-75">
-                                    <#list issueSummary.jiraNames as jiraName>
-                                        <ul class="list-group">
-                                            <li class="list-group-item border-0 active">${jiraName?html}</li>
-                                        </ul>
-                                    </#list>
-                                </h5>
-                                <small class="text-muted font-weight-bold">
-                                    <a href="<#if jiraUrl??>${jiraUrl?html}/browse/${issueSummary.jiraId?url}</#if>" target="_blank">${issueSummary.jiraId?html}</a>
-                                </small>
-                            </div>
-                            <p class="mb-1">
-                                <#list issueSummary.comments as comment>
-                                <ul class="list-group">
-                                    <li class="list-group-item">${comment?html}</li>
-                                </ul>
-                                </#list>
-                            </p>
-                        </div>
-                    </#list>
-                </#if>
-            </div>
+            <#if workDayBefore??>
+                <h4 class="mt-1 card-title text-secondary">Previous work day: ${workDayBefore.date}</h4>
+                <@workDaySummary workDayBefore />
+            </#if>
+            <h4 class="mt-1  card-title">Current work day: ${workDay.date}</h4>
+            <@workDaySummary workDay />
         </div>
     </div>
 </div> <!-- /container -->
