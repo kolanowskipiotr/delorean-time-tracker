@@ -23,7 +23,7 @@ class WorkDayEditController(
 
     @GetMapping("/edit")
     fun showWorkDay(
-        @RequestParam(name = "workDayId") workDayId: Long,
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
         @RequestParam(name = "searchedWorkLogId", required = false) searchedWorkLogId: Long?,
         @RequestParam(name = "searchedJiraIssueId", required = false) searchedJiraIssueId: String?,
         @RequestParam(name = "searchedJiraIssueName", required = false) searchedJiraIssueName: String?,
@@ -60,21 +60,21 @@ class WorkDayEditController(
 
     @PostMapping("/edit")
     fun updateWorkDay(
-        @RequestParam(name = "workDayId") workDayId: Long,
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
         @RequestParam(name = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) date: LocalDate
     ): String {
         workDayService.updateWorkDay(workDayId, date)
-        return "redirect:$URL?workDayId=$workDayId"
+        return  "redirect:${editUrl(workDayId)}"
     }
 
     @GetMapping("/stop")//FIXME: This should be Patch
-    fun stopWorkDay(@RequestParam(name = "workDayId") workDayId: Long): String {
+    fun stopWorkDay(@RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long): String {
         workDayService.stopWorklog(workDayId)
-        return "redirect:$URL?workDayId=$workDayId"
+        return  "redirect:${editUrl(workDayId)}"
     }
 
     @GetMapping("/export")//FIXME: This should be Patch
-    fun exportWorkDay(@RequestParam(name = "workDayId") workDayId: Long): String {
+    fun exportWorkDay(@RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long): String {
         val exportStatus = workDayService.exportWorkDay(workDayId)
         val urlEncodedMessage = URLEncoder.encode(exportStatus.message?:"Error", StandardCharsets.UTF_8.toString())
         return "redirect:$URL?workDayId=$workDayId&success=${exportStatus.success}&message=$urlEncodedMessage"
@@ -82,59 +82,64 @@ class WorkDayEditController(
 
     @PostMapping("/work-log")
     fun addWorkLog(
-        @RequestParam(name = "workDayId") workDayId: Long,
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
         workLog: WorkLogDto
     ): String {
         workDayService.addWorkLog(workDayId, workLog)
-        return "redirect:$URL?workDayId=$workDayId"
+        return  "redirect:${editUrl(workDayId)}"
     }
 
     @PostMapping("/work-log/edit")
     fun editWorkLog(
-        @RequestParam(name = "workDayId") workDayId: Long,
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
         workLog: WorkLogDto
     ): String {
         workDayService.editWorkLog(workDayId, workLog)
-        return "redirect:$URL?workDayId=$workDayId"
+        return  "redirect:${editUrl(workDayId)}"
     }
 
     @PostMapping("/work-log/delete")
     fun deleteReceiver(
-        @RequestParam(name = "workDayId") workDayId: Long,
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
         @RequestParam(name = "workLogId") workLogId: Long
     ): String {
         workDayService.removeWorkLog(workDayId, workLogId)
-        return "redirect:$URL?workDayId=$workDayId"
+        return  "redirect:${editUrl(workDayId)}"
     }
 
     @GetMapping("/work-log/start")//FIXME: This should be Patch
     fun startWorkLog(
-        @RequestParam(name = "workDayId") workDayId: Long,
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
         @RequestParam(name = "workLogId") workLogId: Long
     ): String {
         workDayService.startWorkLog(workDayId, workLogId)
-        return "redirect:$URL?workDayId=$workDayId"
+        return  "redirect:${editUrl(workDayId)}"
     }
 
     @GetMapping("/work-log/continue")//FIXME: This should be Patch
     fun continueWorkLog(
-        @RequestParam(name = "workDayId") workDayId: Long,
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
         @RequestParam(name = "workLogId") workLogId: Long
     ): String {
         workDayService.continueWorkLog(workDayId, workLogId)
-        return "redirect:$URL?workDayId=$workDayId"
+        return  "redirect:${editUrl(workDayId)}"
     }
 
     @GetMapping("/work-log/export/toggle")//FIXME: This should be Patch
     fun toggleExportWorkLog(
-        @RequestParam(name = "workDayId") workDayId: Long,
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
         @RequestParam(name = "workLogId") workLogId: Long
     ): String {
         workDayService.toggleExport(workDayId, workLogId)
-        return "redirect:$URL?workDayId=$workDayId"
+        return "redirect:${editUrl(workDayId)}"
     }
 
     companion object {
+        private const val WORK_DAY_ID_PARAM = "workDayId"
+        
         const val URL = "/work-day/edit"
+        
+        fun editUrl(workDayId: Long) = 
+            "$URL?$WORK_DAY_ID_PARAM=$workDayId"
     }
 }

@@ -23,9 +23,8 @@ class WorkDayListController (
 
     @PostMapping("/add")
     fun addTemplate(workDayDto: WorkDayDto): String{
-        workDayService.addWorkDay(workDayDto)
-
-        return "redirect:$URL" //TODO redirect to edit
+        val workDayId = workDayService.addWorkDay(workDayDto)
+        return "redirect:${WorkDayEditController.editUrl(workDayId)}"
     }
 
     @PostMapping("/delete")
