@@ -4,20 +4,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import pko.delorean.time.tracker.domain.IssueSummary
-import pko.delorean.time.tracker.domain.WorkDay
-import pko.delorean.time.tracker.domain.WorkLog
+import pko.delorean.time.tracker.domain.*
 import pko.delorean.time.tracker.infrastructure.JiraService
 import pko.delorean.time.tracker.infrastructure.JiraService.ConnectionResult
 import pko.delorean.time.tracker.infrastructure.WorkDayJpaRepository
 import pko.delorean.time.tracker.kernel.Utils.Companion.formatTime
+import pko.delorean.time.tracker.kernel.Utils.Companion.workLogDuration
 import pko.delorean.time.tracker.ui.jira.dto.JiraIssueDto
-import pko.delorean.time.tracker.ui.work.day.dto.IssueSummaryDto
-import pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto
-import pko.delorean.time.tracker.ui.work.day.dto.WorkDaysPeriodStatisticsDto
-import pko.delorean.time.tracker.ui.work.day.dto.WorkLogDto
+import pko.delorean.time.tracker.ui.work.day.dto.*
 import java.time.LocalDate
-import kotlin.collections.Map.Entry
 
 @Service
 class WorkDayService @Autowired constructor(
@@ -136,9 +131,9 @@ class WorkDayService @Autowired constructor(
     }
 
     fun calculateStatistics(workDays: List<WorkDayDto>): WorkDaysPeriodStatisticsDto {
-        val statistics = workDays.flatMap { it.statistics?.entries ?: listOf<Entry<String, Long>>() }
-            .groupBy { it.key }
-            .map { it.key to it.value.map { it.value }.sum() }
+        val statistics = workDays.flatMap { it.projectsStatistics.orEmpty() }
+            .groupBy { it.projectKey }
+            .map { it.key to it.value.map { projectStatistics ->  projectStatistics.duration }.sum() }
             .toMap()
         return WorkDaysPeriodStatisticsDto(statistics, statistics.map { it.value }.sum())
     }
@@ -149,7 +144,7 @@ class WorkDayService @Autowired constructor(
             createDate,
             status.name,
             duration,
-            statistics,
+            statistics.map { it.toDto() },
             summary.map { it.toDto() },
             workLogs
                 .sortedBy { it.started }
@@ -162,7 +157,7 @@ class WorkDayService @Autowired constructor(
             jiraId,
             formatTime(started),
             formatTime(ended),
-            workDay.workLogDuration(this),
+            workLogDuration(this, workDay.createDate),
             jiraName,
             comment,
             status.name
@@ -170,4 +165,10 @@ class WorkDayService @Autowired constructor(
 
     private fun IssueSummary.toDto() =
         IssueSummaryDto(jiraId, jiraNames, comments)
+
+    private fun ProjectStatistics.toDto() =
+        ProjectStatisticsDto(projectKey, duration, issuesStatistics.map { it.toDto() })
+
+    private fun IssueStatistics.toDto() =
+        IssueStatisticsDto(issueKey, duration, jiraNames)
 }

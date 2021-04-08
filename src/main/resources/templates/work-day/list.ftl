@@ -69,12 +69,12 @@
                         <td>${workDay.date?html}</td>
                         <td class="text-center"><#if workDay.duration??>${workDay.duration}m<br>(${(workDay.duration/60)?floor}h ${workDay.duration - ((workDay.duration/60)?floor * 60)}m)</#if> </td>
                         <td>
-                            <#if workDay.statistics??>
+                            <#if workDay.projectsStatistics??>
                                 <ul style="list-style-type:none;">
-                                    <#list workDay.statistics?keys as key>
+                                    <#list workDay.projectsStatistics as projectStatistics>
                                         <li>
-                                            <#assign val=workDay.statistics[key]/>
-                                            ${key} - <#if val?? && workDay.duration gt 0> ${val/workDay.duration*100}% - ${val}m (${(val/60)?floor}h ${val - ((val/60)?floor * 60)}m)<#else>0% - 0m (0h 0m)</#if>
+                                            <#assign projectDuration=projectStatistics.duration/>
+                                            ${projectStatistics.projectKey} - <#if projectDuration?? && workDay.duration gt 0> ${projectDuration/workDay.duration*100}% - ${projectDuration}m (${(projectDuration/60)?floor}h ${projectDuration - ((projectDuration/60)?floor * 60)}m)<#else>0% - 0m (0h 0m)</#if>
                                         </li>
                                     </#list>
                                 </ul>

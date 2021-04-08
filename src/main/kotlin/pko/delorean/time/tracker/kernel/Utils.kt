@@ -1,11 +1,15 @@
 package pko.delorean.time.tracker.kernel
 
 import org.apache.commons.lang3.StringUtils
+import pko.delorean.time.tracker.domain.WorkLog
+import pko.delorean.time.tracker.kernel.Utils.Companion.buildDateTimeInstant
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import java.util.*
+import java.util.function.BinaryOperator
 import java.util.stream.Collectors
 
 class Utils {
@@ -46,6 +50,22 @@ class Utils {
                 .withHour(23)
                 .withMinute(59)
                 .toInstant()
+        }
+
+
+        fun sumDurations(workLogs: Collection<WorkLog>, workDayDate: LocalDate): Long =
+            workLogs
+                .map{ workLogDuration(it, workDayDate) }
+                .sum()
+
+
+        fun workLogDuration(worklog: WorkLog, workDayDate: LocalDate): Long {
+            return worklog.getDuration(
+                buildDateTimeInstant(
+                    workDayDate,
+                    Instant.now().truncatedTo(ChronoUnit.MINUTES)
+                )
+            )
         }
     }
 }

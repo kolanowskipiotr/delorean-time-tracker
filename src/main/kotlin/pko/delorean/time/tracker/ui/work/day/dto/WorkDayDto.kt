@@ -8,7 +8,7 @@ data class WorkDayDto(
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) val date: LocalDate,
     val state: String? = null,
     val duration: Long? = null,
-    val statistics: Map<String, Long>? = null,
+    val projectsStatistics: List<ProjectStatisticsDto>? = null,
     val summary: List<IssueSummaryDto>? = null,
     val workLogs: List<WorkLogDto>? = null
 )

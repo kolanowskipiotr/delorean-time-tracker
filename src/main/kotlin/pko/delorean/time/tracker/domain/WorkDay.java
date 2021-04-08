@@ -66,24 +66,22 @@ public class WorkDay implements Serializable {
     public Set<ExportableWorkLog> getUnexportedWorkLogs() {
         return this.workLogs.stream()
                 .filter(WorkLog::isUnexported)
-                .filter(workLog -> workLogDuration(workLog) > 0)
+                .filter(workLog -> Utils.Companion.workLogDuration(workLog, this.createDate) > 0)
                 .map(workLog -> new ExportableWorkLog(workLog, buildExportComment(workLog), createDate))
                 .collect(Collectors.toSet());
     }
 
-    public long workLogDuration(WorkLog worklog) {
-        return worklog.getDuration(Utils.Companion.buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES)));
-    }
-
     public Long getDuration() {
-        return sumDurations(this.workLogs);
+        return Utils.Companion.sumDurations(this.workLogs, this.createDate);
     }
 
-    public Map<String, Long> getStatistics() {
+    public List<ProjectStatistics>  getStatistics() {
         return this.workLogs.stream()
                 .collect(groupingBy(WorkLog::getProjectKey))
                 .entrySet().stream()
-                .collect(toMap(Map.Entry::getKey, entry -> sumDurations(entry.getValue())));
+                .map(it -> new ProjectStatistics(it.getKey(), it.getValue(), this.createDate))
+                .sorted(comparing(ProjectStatistics::getDuration))
+                .collect(Collectors.toList());
     }
 
     public List<IssueSummary> getSummary() {
@@ -211,12 +209,6 @@ public class WorkDay implements Serializable {
                 .forEach(it -> it.end(ended, endOfDay));
     }
 
-    private Long sumDurations(Collection<WorkLog> workLogs) {
-        return workLogs.stream()
-                .map(this::workLogDuration)
-                .reduce(0L, Long::sum);
-    }
-
     private Optional<Instant> modifyWorkloads(WorkLogDto workLogDto) {
         Instant now = now().truncatedTo(MINUTES);
         Instant started = isBlank(workLogDto.getStarted())
@@ -275,7 +267,7 @@ public class WorkDay implements Serializable {
         return defaultString(worklog.getComment()) + " "
                 + Utils.Companion.getDATE_FORMATTER().format(createDate) + ", "
                 + Utils.Companion.getTIME_FORMATTER().format(worklog.getStarted()) + "-" + Utils.Companion.getTIME_FORMATTER().format(worklog.getEnded()) + " "
-                + "(" + workLogDuration(worklog) + "m)";
+                + "(" + Utils.Companion.workLogDuration(worklog, this.createDate) + "m)";
     }
 
     @Override

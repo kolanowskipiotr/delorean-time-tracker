@@ -122,33 +122,61 @@
         </div>
     </div>
 
+
     <div class="card">
         <div class="card-body">
             <h3 class="card-title">Statistics:</h3>
 
-            <div class="list-group">
+            <ul class="list-group">
                 <div class="list-group-item list-group-item-action flex-column align-items-start active py-2">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">Whole day</h5>
-                        <small>${workDay.date} 100%</small>
+                        <small>
+                            <#if workDay.duration??>${workDay.duration}m (${(workDay.duration/60)?floor}h ${workDay.duration - ((workDay.duration/60)?floor * 60)}m)</#if>
+                            -
+                            100%
+                        </small>
                     </div>
-                    <p class="mb-1"><#if workDay.duration??>${workDay.duration}m (${(workDay.duration/60)?floor}h ${workDay.duration - ((workDay.duration/60)?floor * 60)}m)</#if></p>
+                    <p class="mb-1">${workDay.date}</p>
                 </div>
-                <#if workDay.statistics??>
-                    <#list workDay.statistics?keys as key>
-                        <#assign val=workDay.statistics[key]/>
-                        <div class="list-group-item list-group-item-action flex-column align-items-start py-2">
+                <#if workDay.projectsStatistics??>
+                    <#list workDay.projectsStatistics as projectStatistics>
+                        <#assign projectDuration=projectStatistics.duration/>
+                        <li class="list-group-item list-group-item-action flex-column align-items-start py-2">
                             <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">${key}</h5>
-                                <small><#if workDay.duration gt 0 >${val/workDay.duration*100}<#else>0</#if>%</small>
+                                <h5 class="mb-1 w-75">${projectStatistics.projectKey}</h5>
+                                <small>
+                                    <#if projectDuration??>${projectDuration}m (${(projectDuration/60)?floor}h ${projectDuration - ((projectDuration/60)?floor * 60)}m)</#if>
+                                    -
+                                    <#if workDay.duration gt 0 >${projectDuration/workDay.duration*100}<#else>0</#if>%
+                                </small>
                             </div>
-                            <p class="mb-1"><#if val??>${val}m (${(val/60)?floor}h ${val - ((val/60)?floor * 60)}m)</#if></p>
-                        </div>
+                            <ul class="list-group">
+                                <#list projectStatistics.issuesStatistics as issueStatistics>
+                                    <#assign issiueDuration=issueStatistics.duration/>
+                                    <li class="list-group-item list-group-item-action flex-column align-items-start py-2">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1 w-75">
+                                                ${issueStatistics.issueKey}:
+                                                <#list issueStatistics.jiraNames as jiraName>
+                                                    ${jiraName?html}
+                                                    <#if jiraName_has_next>, </#if>
+                                                </#list>
+                                            </h5>
+                                            <small>
+                                                <#if issiueDuration??>${issiueDuration}m (${(issiueDuration/60)?floor}h ${issiueDuration - ((issiueDuration/60)?floor * 60)}m)</#if>
+                                                -
+                                                <#if workDay.duration gt 0 >${issiueDuration/workDay.duration*100}<#else>0</#if>%
+                                            </small>
+                                        </div>
+                                    </li>
+                                </#list>
+                            </ul>
+                        </li>
                     </#list>
                 </#if>
             </div>
         </div>
-    </div>
 
 
     <#macro workDaySummary workDayToPresent>
