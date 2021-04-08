@@ -103,7 +103,7 @@
             <h3 class="card-title">Statistics:</h3>
 
             <div class="list-group">
-                <div class="list-group-item list-group-item-action flex-column align-items-start active">
+                <div class="list-group-item list-group-item-action flex-column align-items-start active py-2">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">Period ${filters.createDateStart} - ${filters.createDateEnd} </h5>
                         <small>100%</small>
@@ -113,7 +113,7 @@
                 <#if periodStatistics.statistics??>
                     <#list periodStatistics.statistics?keys as key>
                         <#assign val=periodStatistics.statistics[key]/>
-                        <div class="list-group-item list-group-item-action flex-column align-items-start">
+                        <div class="list-group-item list-group-item-action flex-column align-items-start py-2">
                             <div class="d-flex w-100 justify-content-between">
                                 <h5 class="mb-1">${key}</h5>
                                 <small><#if periodStatistics.duration gt 0 >${val/periodStatistics.duration*100}<#else>0</#if>%</small>
