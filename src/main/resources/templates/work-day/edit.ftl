@@ -1,6 +1,7 @@
 <#-- @ftlvariable name="workDay" type="pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto" -->
 
 <#include "/header.ftl">
+<#include "/macros/url-utils.ftl">
 
 <@header "Work day: ${workDay.date}"/>
 
@@ -102,7 +103,7 @@
                                 <td>${workLog.started!?html}</td>
                                 <td>${workLog.ended!?html}</td>
                                 <td class="text-center"><#if workLog.duration??>${workLog.duration}m<br>(${(workLog.duration/60)?floor}h ${workLog.duration - ((workLog.duration/60)?floor * 60)}m)</#if> </td>
-                                <td><a href="<#if jiraUrl??>${jiraUrl?html}/browse/${workLog.jiraIssiueId?html}</#if>" target="_blank">${workLog.jiraIssiueId?html}</a></td>
+                                <td><@issueLink workLog.jiraIssiueId jiraUrl/></td>
                                 <td>
                                     <blockquote class="blockquote">
                                         <p class="mb-0">${workLog.jiraIssiueName!?html}</p>
@@ -157,7 +158,7 @@
                                     <li class="list-group-item list-group-item-action flex-column align-items-start py-2">
                                         <div class="d-flex w-100 justify-content-between">
                                             <h5 class="mb-1 w-75">
-                                                ${issueStatistics.issueKey}:
+                                                <@issueLink issueStatistics.issueKey jiraUrl/>:
                                                 <#list issueStatistics.jiraNames as jiraName>
                                                     ${jiraName?html}
                                                     <#if jiraName_has_next>, </#if>
@@ -194,7 +195,7 @@
                                 </ul>
                             </h5>
                             <small class="text-muted font-weight-bold">
-                                <a href="<#if jiraUrl??>${jiraUrl?html}/browse/${issueSummary.jiraId?url}</#if>" target="_blank">${issueSummary.jiraId?html}</a>
+                                <@issueLink issueSummary.jiraId jiraUrl/>
                             </small>
                         </div>
                         <p class="mb-1">
@@ -213,7 +214,7 @@
         <div class="card-body">
             <h3 class="card-title">Summary:</h3>
             <#if workDayBefore??>
-                <h4 class="mt-1 card-title text-secondary">Previous work day: ${workDayBefore.date}</h4>
+                <h4 class="mt-1 card-title text-secondary">Previous work day: <a href="/work-day/edit?workDayId=${workDayBefore.id?c}" role="button">${workDayBefore.date}</a></h4>
                 <@workDaySummary workDayBefore />
             </#if>
             <h4 class="mt-1  card-title">Current work day: ${workDay.date}</h4>
