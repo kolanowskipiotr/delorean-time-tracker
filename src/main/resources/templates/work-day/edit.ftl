@@ -87,10 +87,9 @@
                     <th>Ended</th>
                     <th>Duration</th>
                     <th>JIRA ID</th>
-                    <th>JIRA Issue summary</th>
-                    <th>Comment</th>
+                    <th>JIRA Issue summary / Comment</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th style="width: 12%">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -104,18 +103,16 @@
                                 <td>${workLog.ended!?html}</td>
                                 <td class="text-center"><#if workLog.duration??>${workLog.duration}m<br>(${(workLog.duration/60)?floor}h ${workLog.duration - ((workLog.duration/60)?floor * 60)}m)</#if> </td>
                                 <td><a href="<#if jiraUrl??>${jiraUrl?html}/browse/${workLog.jiraIssiueId?html}</#if>" target="_blank">${workLog.jiraIssiueId?html}</a></td>
-                                <td>${workLog.jiraIssiueName!?html}</td>
-                                <td>${workLog.jiraIssiueComment!?html}</td>
+                                <td>
+                                    <blockquote class="blockquote">
+                                        <p class="mb-0">${workLog.jiraIssiueName!?html}</p>
+                                        <footer class="blockquote-footer float-right">${workLog.jiraIssiueComment!?html}</footer>
+                                    </blockquote>
+                                </td>
                                 <td>${workLog.status!?html}</td>
                                 <td>
-                                    <div class="btn-toolbar" role="toolbar">
-                                        <div class="btn-group mr-2" role="group">
-                                            <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}" role="button">✏️ Edit</a>
-                                        </div>
-                                        <div class="btn-group mr-2" role="group">
-                                            <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "btn btn-danger" "/work-day/work-log/delete" "🗑️ Delete" />
-                                        </div>
-                                    </div>
+                                    <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}" role="button">✏️ Edit</a>
+                                    <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "btn btn-danger" "/work-day/work-log/delete" "🗑️ Delete" />
                                 </td>
                             </tr>
                         </#list>
