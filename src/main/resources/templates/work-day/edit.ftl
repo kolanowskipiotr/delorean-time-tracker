@@ -5,7 +5,7 @@
 
 <@header "Work day: ${workDay.date}"/>
 
-<div class="container" >
+<div class="container">
     <h1>Work day: ${workDay.date}</h1>
     <nav class="navbar navbar-light bg-light justify-content-between" style="background-color: #e3f2fd;">
         <a class="navbar-brand">Navigation</a>
@@ -107,7 +107,9 @@
                                 <td>
                                     <blockquote class="blockquote">
                                         <p class="mb-0">${workLog.jiraIssiueName!?html}</p>
-                                        <footer class="blockquote-footer float-right">${workLog.jiraIssiueComment!?html}</footer>
+                                        <#if workLog.jiraIssiueComment?has_content >
+                                            <footer class="blockquote-footer float-right">${workLog.jiraIssiueComment!?html}</footer>
+                                        </#if>
                                     </blockquote>
                                 </td>
                                 <td>${workLog.status!?html}</td>
@@ -131,7 +133,7 @@
             <ul class="list-group">
                 <div class="list-group-item list-group-item-action flex-column align-items-start active py-2">
                     <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">Whole day</h5>
+                        <h5 class="mb-1 font-weight-bold">Whole day</h5>
                         <small>
                             <#if workDay.duration??>${workDay.duration}m (${(workDay.duration/60)?floor}h ${workDay.duration - ((workDay.duration/60)?floor * 60)}m)</#if>
                             -
@@ -145,7 +147,7 @@
                         <#assign projectDuration=projectStatistics.duration/>
                         <li class="list-group-item list-group-item-action flex-column align-items-start py-2">
                             <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1 w-75">${projectStatistics.projectKey}</h5>
+                                <h5 class="my-1 w-75 font-weight-bold">${projectStatistics.projectKey}</h5>
                                 <small>
                                     <#if projectDuration??>${projectDuration}m (${(projectDuration/60)?floor}h ${projectDuration - ((projectDuration/60)?floor * 60)}m)</#if>
                                     -
@@ -155,15 +157,17 @@
                             <ul class="list-group">
                                 <#list projectStatistics.issuesStatistics as issueStatistics>
                                     <#assign issiueDuration=issueStatistics.duration/>
-                                    <li class="list-group-item list-group-item-action flex-column align-items-start py-2">
-                                        <div class="d-flex w-100 justify-content-between">
-                                            <h5 class="mb-1 w-75">
-                                                <@issueLink issueStatistics.issueKey jiraUrl/>:
-                                                <#list issueStatistics.jiraNames as jiraName>
-                                                    ${jiraName?html}
-                                                    <#if jiraName_has_next>, </#if>
-                                                </#list>
-                                            </h5>
+                                    <li class="list-group-item list-group-item-action flex-column align-items-start py-1">
+                                        <div class="d-flex w-100 justify-content-between my-0">
+                                            <blockquote class="blockquote my-0"w-75>
+                                                <footer class="blockquote-footer">
+                                                    <@issueLink issueStatistics.issueKey jiraUrl/>:
+                                                    <#list issueStatistics.jiraNames as jiraName>
+                                                        ${jiraName?html}
+                                                        <#if jiraName_has_next>, </#if>
+                                                    </#list>
+                                                </footer>
+                                            </blockquote>
                                             <small>
                                                 <#if issiueDuration??>${issiueDuration}m (${(issiueDuration/60)?floor}h ${issiueDuration - ((issiueDuration/60)?floor * 60)}m)</#if>
                                                 -
@@ -187,7 +191,7 @@
                     <div class="list-group-item list-group-item-action flex-column align-items-start">
 
                         <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1 w-75">
+                            <h5 class="my-1 w-75">
                                 <ul class="list-group">
                                     <#list issueSummary.jiraNames as jiraName>
                                         <li class="list-group-item border-0 active py-1">${jiraName?html}</li>
@@ -198,17 +202,17 @@
                                 <@issueLink issueSummary.jiraId jiraUrl/>
                             </small>
                         </div>
-                        <p class="mb-1">
-                            <ul class="list-group">
-                                <#list issueSummary.comments as comment>
+                        <ul class="list-group">
+                            <#list issueSummary.comments as comment>
+                                <#if comment?has_content >
                                     <li class="list-group-item py-1">
-                                        <blockquote class="blockquote">
+                                        <blockquote class="blockquote my-0">
                                             <footer class="blockquote-footer">${comment?html}</footer>
                                         </blockquote>
                                     </li>
-                                </#list>
-                            </ul>
-                        </p>
+                                </#if>
+                            </#list>
+                        </ul>
                     </div>
                 </#list>
             </#if>
