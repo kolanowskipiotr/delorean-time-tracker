@@ -105,8 +105,8 @@
                                 <td class="text-center"><#if workLog.duration??>${workLog.duration}m<br>(${(workLog.duration/60)?floor}h ${workLog.duration - ((workLog.duration/60)?floor * 60)}m)</#if> </td>
                                 <td><@issueLink workLog.jiraIssiueId jiraUrl/></td>
                                 <td>
+                                    ${workLog.jiraIssiueName!?html}
                                     <blockquote class="blockquote">
-                                        <p class="mb-0">${workLog.jiraIssiueName!?html}</p>
                                         <#if workLog.jiraIssiueComment?has_content >
                                             <footer class="blockquote-footer float-right">${workLog.jiraIssiueComment!?html}</footer>
                                         </#if>
@@ -131,7 +131,7 @@
             <h3 class="card-title">Statistics:</h3>
 
             <ul class="list-group">
-                <div class="list-group-item list-group-item-action flex-column align-items-start active py-2">
+                <div class="list-group-item list-group-item-action flex-column align-items-start active py-1">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1 font-weight-bold">Whole day</h5>
                         <small>
@@ -145,7 +145,7 @@
                 <#if workDay.projectsStatistics??>
                     <#list workDay.projectsStatistics as projectStatistics>
                         <#assign projectDuration=projectStatistics.duration/>
-                        <li class="list-group-item list-group-item-action flex-column align-items-start py-2">
+                        <li class="list-group-item list-group-item-action flex-column align-items-start py-1">
                             <div class="d-flex w-100 justify-content-between">
                                 <h5 class="my-1 w-75 font-weight-bold">${projectStatistics.projectKey}</h5>
                                 <small>
@@ -188,7 +188,7 @@
         <div class="list-group">
             <#if workDayToPresent.summary??>
                 <#list workDayToPresent.summary as issueSummary>
-                    <div class="list-group-item list-group-item-action flex-column align-items-start">
+                    <div class="list-group-item list-group-item-action flex-column align-items-start py-1">
 
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="my-1 w-75">
