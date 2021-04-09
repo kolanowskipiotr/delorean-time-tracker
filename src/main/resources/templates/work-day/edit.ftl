@@ -201,7 +201,11 @@
                         <p class="mb-1">
                             <ul class="list-group">
                                 <#list issueSummary.comments as comment>
-                                    <li class="list-group-item py-1">${comment?html}</li>
+                                    <li class="list-group-item py-1">
+                                        <blockquote class="blockquote">
+                                            <footer class="blockquote-footer">${comment?html}</footer>
+                                        </blockquote>
+                                    </li>
                                 </#list>
                             </ul>
                         </p>
