@@ -4,6 +4,7 @@ import com.atlassian.jira.rest.client.api.JiraRestClient
 import com.atlassian.jira.rest.client.api.RestClientException
 import com.atlassian.jira.rest.client.api.SearchRestClient
 import com.atlassian.jira.rest.client.api.domain.Issue
+import com.atlassian.jira.rest.client.api.domain.IssueType
 import com.atlassian.jira.rest.client.api.domain.ServerInfo
 import com.atlassian.jira.rest.client.api.domain.input.WorklogInputBuilder
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory
@@ -13,17 +14,23 @@ import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Repository
 import org.springframework.web.context.annotation.ApplicationScope
 import pko.delorean.time.tracker.domain.dto.ExportableWorkLog
+import pko.delorean.time.tracker.infrastructure.model.IssiueTypes
 import pko.delorean.time.tracker.kernel.Utils.Companion.buildDateTimeInstant
 import pko.delorean.time.tracker.ui.jira.dto.JiraCredentialsDto
 import pko.delorean.time.tracker.ui.jira.dto.JiraIssueDto
+import pko.delorean.time.tracker.ui.jira.dto.JiraIssueTypeDto
 import java.net.URI
 import java.time.Instant.now
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit.MINUTES
+import java.util.concurrent.TimeUnit
+
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 
 
 @Repository
@@ -40,7 +47,7 @@ class JiraService {
         findJiraServerInfo().success
 
     fun findJiraServerInfo(): ConnectionResult<String> {
-        var serverInfo: ServerInfo?
+        val serverInfo: ServerInfo?
         try {
             val restClient: JiraRestClient = buildJiraClient()
             serverInfo = restClient.metadataClient.serverInfo.get()
@@ -77,14 +84,14 @@ class JiraService {
         this.jiraCredentials
 
     fun findJiraIssues(userQuery: String): ConnectionResult<List<JiraIssueDto>> {
-        var foundJiraIssues = listOf<JiraIssueDto>()
+        val foundJiraIssues: List<JiraIssueDto>
         try {
             val jiraClient = buildJiraClient()
-            val jiraQuery = buildJiraQuery(jiraClient, userQuery)
+            val jiraQuery = buildJiraQuery(userQuery)
             val searchClient = jiraClient.searchClient
             foundJiraIssues = searchByIssueKey(searchClient, userQuery)
                 .plus(searchClient.searchJql(jiraQuery).claim().issues)
-                .map { JiraIssueDto(it.key, it.summary) }
+                .map { JiraIssueDto(it.key, it.summary,  it.issueType.toDto()) }
             jiraClient.close()
         } catch (e: Exception) { //FIXME: Catch only important exceptions
             logger.error(e.message, e)
@@ -93,14 +100,45 @@ class JiraService {
         return ConnectionResult.success(foundJiraIssues)
     }
 
-    @Cacheable("getAllIssiueTypes")
-    fun getAllIssiueTypes(jiraClient: JiraRestClient): List<String> =
-        jiraClient.metadataClient.issueTypes.claim()
-            .map { it.name }
-            .map { it.toUpperCase() }
+    fun getIssueTypesCached(): IssiueTypes =
+        getIssueTypesCache.get("getIssueTypes")
+    private var getIssueTypesCache: LoadingCache<String, IssiueTypes> =
+        CacheBuilder.newBuilder()
+            .maximumSize(1)
+            .expireAfterWrite(15, TimeUnit.MINUTES)
+            .build(object : CacheLoader<String, IssiueTypes>() {
+                @Throws(java.lang.Exception::class)
+                override fun load(key: String): IssiueTypes {
+                    val jiraClient = buildJiraClient()
+                    return getIssueTypes(jiraClient)
+                }
+            })
+    private fun getIssueTypes(jiraClient: JiraRestClient): IssiueTypes =
+        IssiueTypes(jiraClient.metadataClient.issueTypes.claim().map { it.toDto() })
 
-    @Cacheable("getAllProjectNames")
-    fun getAllProjectNames(jiraClient: JiraRestClient) =
+    fun getIssueType(jiraIssueType: String): JiraIssueTypeDto {
+        try {
+            return getIssueTypesCached().getType(jiraIssueType)
+        } catch (e: Exception) { //FIXME: Catch only important exceptions
+            logger.error(e.message, e)
+        }
+        return IssiueTypes().getType(jiraIssueType)
+    }
+
+    fun getAllProjectNamesCached():  List<String> =
+        allProjectNamesCache.get("getAllProjectNames")
+    private var allProjectNamesCache: LoadingCache<String,  List<String>> =
+        CacheBuilder.newBuilder()
+            .maximumSize(1)
+            .expireAfterWrite(15, TimeUnit.MINUTES)
+            .build(object : CacheLoader<String,  List<String>>() {
+                @Throws(java.lang.Exception::class)
+                override fun load(key: String): List<String> {
+                    val jiraClient = buildJiraClient()
+                    return getAllProjectNames(jiraClient)
+                }
+            })
+    private fun getAllProjectNames(jiraClient: JiraRestClient) =
         jiraClient.projectClient.allProjects.claim()
             .map { it.key }
             .map { it.toUpperCase() }
@@ -132,11 +170,10 @@ class JiraService {
     }
 
     private fun buildJiraQuery(
-        jiraClient: JiraRestClient,
         userQuery: String
     ): String {
-        val projectNames: List<String> = getAllProjectNames(jiraClient)
-        val issueTypes: List<String> = getAllIssiueTypes(jiraClient)
+        val projectNames = getAllProjectNamesCached()
+        val issueTypes = getIssueTypesCached()
         val jiraQuery = userQuery.split(" ")
             .map { it.trim() }
             .joinToString(
@@ -146,10 +183,10 @@ class JiraService {
         return jiraQuery
     }
 
-    private fun buildQueryPart(word: String, projectNames: List<String>, issiueTypes: List<String>): String {
+    private fun buildQueryPart(word: String, projectNames: List<String>, issueTypes: IssiueTypes): String {
         if (projectNames.contains(word.toUpperCase())) {
             return "project = " + word.toUpperCase()
-        } else if (issiueTypes.contains(word.toUpperCase())) {
+        } else if (issueTypes.contains(word)) {
             return "issuetype = " + word.toLowerCase()
         }
 
@@ -170,7 +207,7 @@ class JiraService {
         val factory = AsynchronousJiraRestClientFactory()
         val restClient: JiraRestClient =
             factory.createWithBasicHttpAuthentication(
-                URI(jiraCredentials!!.jiraUrl),//FIXME: Handle situation without !!
+                URI(jiraCredentials!!.jiraUrl!!),//FIXME: Handle situation without !!
                 jiraCredentials!!.jiraUserName,
                 jiraCredentials!!.jiraUserPassword
             )
@@ -190,4 +227,8 @@ class JiraService {
                 ConnectionResult(true, value, StringUtils.abbreviate(message, 200))
         }
     }
+
+    private fun IssueType.toDto() =
+        JiraIssueTypeDto(name, self, id, iconUri, description, isSubtask)
+
 }

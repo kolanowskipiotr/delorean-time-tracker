@@ -1,6 +1,8 @@
 package pko.delorean.time.tracker.ui.work.day.dto
 
 import org.springframework.format.annotation.DateTimeFormat
+import pko.delorean.time.tracker.ui.work.day.dto.statistics.ProjectStatisticsDto
+import pko.delorean.time.tracker.ui.work.day.dto.summary.IssueSummaryDto
 import java.time.LocalDate
 
 data class WorkDayDto(

@@ -58,4 +58,12 @@
 
     </changeSet>
 
+    <changeSet id="add jira issue type to work log" author="pko">
+        <addColumn tableName="work_logs">
+            <column name="jira_issue_type" type="varchar(255)" defaultValue="NO_TYPE">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

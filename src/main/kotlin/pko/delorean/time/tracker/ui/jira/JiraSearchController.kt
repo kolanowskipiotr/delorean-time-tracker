@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import pko.delorean.time.tracker.application.WorkDayService
 import pko.delorean.time.tracker.infrastructure.JiraService
+import java.util.Random
 
 @Controller
 @RequestMapping("/jira/issue/search")
@@ -21,6 +22,7 @@ class JiraSearchController(
         @RequestParam(name = "query", required = false) query: String?,
         model: Model
     ): String {
+        model.addAttribute("random", Random())
         model.addAttribute("jiraUrl", jiraService.credentials()?.jiraUrl)
         model.addAttribute("workDayId", workDayId)
         if(query == null) {

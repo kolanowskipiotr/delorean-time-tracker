@@ -5,13 +5,19 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import pko.delorean.time.tracker.domain.*
+import pko.delorean.time.tracker.domain.statistics.IssueStatistics
+import pko.delorean.time.tracker.domain.summary.IssueSummary
 import pko.delorean.time.tracker.infrastructure.JiraService
 import pko.delorean.time.tracker.infrastructure.JiraService.ConnectionResult
 import pko.delorean.time.tracker.infrastructure.WorkDayJpaRepository
 import pko.delorean.time.tracker.kernel.Utils.Companion.formatTime
 import pko.delorean.time.tracker.kernel.Utils.Companion.workLogDuration
 import pko.delorean.time.tracker.ui.jira.dto.JiraIssueDto
+import pko.delorean.time.tracker.ui.jira.dto.JiraIssueTypeDto
 import pko.delorean.time.tracker.ui.work.day.dto.*
+import pko.delorean.time.tracker.ui.work.day.dto.statistics.IssueStatisticsDto
+import pko.delorean.time.tracker.ui.work.day.dto.statistics.ProjectStatisticsDto
+import pko.delorean.time.tracker.ui.work.day.dto.summary.IssueSummaryDto
 import java.time.LocalDate
 
 @Service
@@ -48,7 +54,7 @@ class WorkDayService @Autowired constructor(
             .flatMap { it.workLogs }
             .sortedByDescending { it.started }
             .distinctBy { it.jiraId }
-            .map { JiraIssueDto(it.jiraId, it.jiraName, it.comment) }
+            .map { it.toDto() }
         return if (issues.size > 100) issues.subList(0, 99) else issues
     }
 
@@ -155,6 +161,7 @@ class WorkDayService @Autowired constructor(
         WorkLogDto(
             id,
             jiraId,
+            jiraIssueType.toDto(),
             formatTime(started),
             formatTime(ended),
             workLogDuration(this, workDay.createDate),
@@ -162,13 +169,31 @@ class WorkDayService @Autowired constructor(
             comment,
             status.name
         )
+    private fun WorkLog.toDto() =
+        JiraIssueDto(jiraId, jiraName, jiraIssueType.toJiraDto(), comment)
 
     private fun IssueSummary.toDto() =
-        IssueSummaryDto(jiraId, jiraNames, comments)
+        IssueSummaryDto(jiraId, jiraIssues.map { it.toDto() })
 
     private fun ProjectStatistics.toDto() =
         ProjectStatisticsDto(projectKey, duration, issuesStatistics.map { it.toDto() })
 
     private fun IssueStatistics.toDto() =
-        IssueStatisticsDto(issueKey, duration, jiraNames)
+        IssueStatisticsDto(issueKey, duration, jiraIssues.map { it.toDto() })
+
+    private fun pko.delorean.time.tracker.domain.statistics.JiraIssue.toDto() =
+        pko.delorean.time.tracker.ui.work.day.dto.statistics.JiraIssueDto(jiraName, jiraIssueType.toDto())
+
+    private fun pko.delorean.time.tracker.domain.summary.JiraIssue.toDto() =
+        pko.delorean.time.tracker.ui.work.day.dto.summary.JiraIssueDto(jiraName, jiraIssueType.toDto(), jiraComment)
+
+    private fun JiraIssueType.toDto() =
+        jiraService.getIssueType(value).toDto()
+
+    private fun JiraIssueType.toJiraDto() =
+        jiraService.getIssueType(value)
+
+    private fun JiraIssueTypeDto.toDto() =
+        pko.delorean.time.tracker.ui.work.day.dto.JiraIssueTypeDto(name, self, id, iconUri, description, subtask)
 }
+

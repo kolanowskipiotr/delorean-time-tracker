@@ -1,5 +1,6 @@
-package pko.delorean.time.tracker.domain;
+package pko.delorean.time.tracker.domain.statistics;
 
+import pko.delorean.time.tracker.domain.WorkLog;
 import pko.delorean.time.tracker.kernel.Utils;
 
 import java.time.LocalDate;
@@ -14,14 +15,14 @@ public class IssueStatistics {
 
     private final String issueKey;
     private final Long duration;
-    private final Set<String> jiraNames;
+    private final Set<JiraIssue> jiraIssues;
 
     public IssueStatistics(String issueKey, List<WorkLog> workLogs, LocalDate workDayDate) {
         this.issueKey = issueKey;
         this.duration = Utils.Companion.sumDurations(workLogs, workDayDate);
-        this.jiraNames = emptyIfNull(workLogs).stream()
+        this.jiraIssues = emptyIfNull(workLogs).stream()
                 .sorted(comparing(WorkLog::getStarted))
-                .map(WorkLog::getJiraName)
+                .map(workLog -> new JiraIssue(workLog.getJiraName(), workLog.getJiraIssueType()))
                 .collect(Collectors.toSet());
     }
 
@@ -33,7 +34,7 @@ public class IssueStatistics {
         return duration;
     }
 
-    public Set<String> getJiraNames() {
-        return jiraNames;
+    public Set<JiraIssue> getJiraIssues() {
+        return jiraIssues;
     }
 }

@@ -51,6 +51,9 @@ public class WorkLog implements Serializable {
     @Column(name = "status")
     private WorkDayStatus status;
 
+    @Embedded
+    private JiraIssueType jiraIssueType;
+
     //Hibernate need this
     public WorkLog() {
     }
@@ -62,10 +65,10 @@ public class WorkLog implements Serializable {
             String jiraIssueId,
             String jiraIssueName,
             String jiraIssueComment,
-            Instant endOfDay
-    ) {
+            Instant endOfDay,
+            JiraIssueType jiraIssueType) {
         this.workDay = workDay;
-        updateState(started, ended, jiraIssueId, jiraIssueName, jiraIssueComment, endOfDay);
+        updateState(started, ended, jiraIssueId, jiraIssueType, jiraIssueName, jiraIssueComment, endOfDay);
     }
 
     public Long getId() {
@@ -101,6 +104,10 @@ public class WorkLog implements Serializable {
 
     public String getJiraName() {
         return jiraName;
+    }
+
+    public JiraIssueType getJiraIssueType() {
+        return jiraIssueType;
     }
 
     public String getComment() {
@@ -145,8 +152,9 @@ public class WorkLog implements Serializable {
         this.ended = endAt;
     }
 
-    void updateState(Instant started, Instant ended, String jiraIssueId, String jiraIssueName, String jiraIssueComment, Instant endOfDay) {
+    void updateState(Instant started, Instant ended, String jiraIssueId, JiraIssueType jiraIssueType, String jiraIssueName, String jiraIssueComment, Instant endOfDay) {
         this.jiraId = jiraIssueId;
+        this.jiraIssueType = jiraIssueType;
         this.jiraName = jiraIssueName;
         this.comment = jiraIssueComment;
         this.start(started);

@@ -1,7 +1,7 @@
 <#-- @ftlvariable name="workDay" type="pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto" -->
 
 <#include "/header.ftl">
-<#include "/macros/url-utils.ftl">
+<#include "/macros/issue-utils.ftl">
 
 <@header "Work day: ${workDay.date}"/>
 
@@ -47,10 +47,11 @@
             <form action="/work-day/work-log<#if searchedWorkLogId??>/edit</#if>" method="post">
                 <div class="form-group mb-2">
                     <input type="hidden" class="form-control" id="workDayId" name="workDayId" value="${workDay.id?c}"/>
-                    <input type="hidden" class="form-control" id="id" name="id" value="${(searchedWorkLogId?c)!}"/>
-                    <input type="text" class="form-control" id="jiraIssiueId" name="jiraIssiueId" placeholder="JIRA ID" value="${searchedJiraIssueId!?html}" required="required"/>
-                    <input type="text" class="form-control" id="jiraIssiueName" name="jiraIssiueName" placeholder="JIRA Issue summary" value="${searchedJiraIssueName!?html}"/>
-                    <input type="text" class="form-control" id="jiraIssiueComment" name="jiraIssiueComment" placeholder="Comment" value="${searchedJiraIssueComment!?html}"/>
+                    <input type="hidden" class="form-control" id="workLogId" name="workLogId" value="${(searchedWorkLogId?c)!}"/>
+                    <input type="text" class="form-control" id="jiraIssueId" name="jiraIssueId" placeholder="JIRA ID" value="${searchedJiraIssueId!?html}" required="required"/>
+                    <input type="text" class="form-control" id="jiraIssueType" name="jiraIssueType" placeholder="JIRA Issue type" value="${searchedJiraIssueType!?html}" required="required"/>
+                    <input type="text" class="form-control" id="jiraIssueName" name="jiraIssueName" placeholder="JIRA Issue summary" value="${searchedJiraIssueName!?html}"/>
+                    <input type="text" class="form-control" id="jiraIssueComment" name="jiraIssueComment" placeholder="Work log comment" value="${searchedJiraIssueComment!?html}"/>
                     <div class="form-inline">
                         <div class="form-group">
                             <label for="started" class="control-label mr-2">Start: </label>
@@ -105,7 +106,7 @@
                                 <td class="text-center"><#if workLog.duration??>${workLog.duration}m<br>(${(workLog.duration/60)?floor}h ${workLog.duration - ((workLog.duration/60)?floor * 60)}m)</#if> </td>
                                 <td><@issueLink workLog.jiraIssiueId jiraUrl/></td>
                                 <td>
-                                    ${workLog.jiraIssiueName!?html}
+                                    <@issueType workLog.jiraIssueType/> ${workLog.jiraIssiueName!?html}
                                     <blockquote class="blockquote">
                                         <#if workLog.jiraIssiueComment?has_content >
                                             <footer class="blockquote-footer float-right">${workLog.jiraIssiueComment!?html}</footer>
@@ -114,7 +115,7 @@
                                 </td>
                                 <td>${workLog.status!?html}</td>
                                 <td>
-                                    <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}" role="button">✏️ Edit</a>
+                                    <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueType=${workLog.jiraIssueType.name?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}" role="button">✏️ Edit</a>
                                     <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "btn btn-danger" "/work-day/work-log/delete" "🗑️ Delete" />
                                 </td>
                             </tr>
@@ -162,9 +163,9 @@
                                             <blockquote class="blockquote my-0"w-75>
                                                 <footer class="blockquote-footer">
                                                     <@issueLink issueStatistics.issueKey jiraUrl/>:
-                                                    <#list issueStatistics.jiraNames as jiraName>
-                                                        ${jiraName?html}
-                                                        <#if jiraName_has_next>, </#if>
+                                                    <#list issueStatistics.distinctJiraIssuesByName() as jiraIssue>
+                                                        <@issueType jiraIssue.jiraIssueType/> ${jiraIssue.jiraName?html}
+                                                        <#if jiraIssue_has_next>, </#if>
                                                     </#list>
                                                 </footer>
                                             </blockquote>
@@ -193,8 +194,8 @@
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="my-1 w-75">
                                 <ul class="list-group">
-                                    <#list issueSummary.jiraNames as jiraName>
-                                        <li class="list-group-item border-0 active py-1">${jiraName?html}</li>
+                                    <#list issueSummary.distinctJiraIssuesByName() as jiraIssue>
+                                        <li class="list-group-item border-0 active py-1"><@issueType jiraIssue.jiraIssueType/> ${jiraIssue.jiraName?html}</li>
                                     </#list>
                                 </ul>
                             </h5>
@@ -203,11 +204,11 @@
                             </small>
                         </div>
                         <ul class="list-group">
-                            <#list issueSummary.comments as comment>
-                                <#if comment?has_content >
+                            <#list issueSummary.distinctJiraIssuesByComment() as jiraIssue>
+                                <#if jiraIssue.jiraComment?has_content >
                                     <li class="list-group-item py-1">
                                         <blockquote class="blockquote my-0">
-                                            <footer class="blockquote-footer">${comment?html}</footer>
+                                            <footer class="blockquote-footer">${jiraIssue.jiraComment?html}</footer>
                                         </blockquote>
                                     </li>
                                 </#if>

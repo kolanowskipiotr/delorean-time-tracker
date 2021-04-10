@@ -8,11 +8,15 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import pko.delorean.time.tracker.application.WorkDayService
+import pko.delorean.time.tracker.domain.JiraIssueType
 import pko.delorean.time.tracker.infrastructure.JiraService
+import pko.delorean.time.tracker.ui.work.day.dto.JiraIssueTypeDto
 import pko.delorean.time.tracker.ui.work.day.dto.WorkLogDto
+import pko.delorean.time.tracker.ui.work.day.form.WorkLogForm
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
+import java.util.*
 
 @Controller
 @RequestMapping("/work-day")
@@ -35,6 +39,7 @@ class WorkDayEditController(
         @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
         @RequestParam(name = "searchedWorkLogId", required = false) searchedWorkLogId: Long?,
         @RequestParam(name = "searchedJiraIssueId", required = false) searchedJiraIssueId: String?,
+        @RequestParam(name = "searchedJiraIssueType", required = false) searchedJiraIssueType: String?,
         @RequestParam(name = "searchedJiraIssueName", required = false) searchedJiraIssueName: String?,
         @RequestParam(name = "searchedJiraIssueComment", required = false) searchedJiraIssueComment: String?,
         @RequestParam(name = "searchedWorkLogStart", required = false) searchedWorkLogStart: String?,
@@ -44,12 +49,14 @@ class WorkDayEditController(
         @RequestParam(name = "message", required = false) message: String?,
         model: Model
     ): String {
+        model.addAttribute("random", Random())
         model.addAttribute("workDay", workDayService.getWorkDay(workDayId))
         model.addAttribute("workDayBefore", workDayService.findWorkDayBefore(workDayId))
 
         model.addAttribute("jiraUrl", jiraService.credentials()?.jiraUrl)
         model.addAttribute("searchedWorkLogId", searchedWorkLogId)
         model.addAttribute("searchedJiraIssueId", searchedJiraIssueId)
+        model.addAttribute("searchedJiraIssueType", searchedJiraIssueType)
         model.addAttribute("searchedJiraIssueName", searchedJiraIssueName)
         model.addAttribute("searchedJiraIssueComment", searchedJiraIssueComment)
         model.addAttribute("searchedWorkLogStart", searchedWorkLogStart)
@@ -91,20 +98,18 @@ class WorkDayEditController(
 
     @PostMapping("/work-log")
     fun addWorkLog(
-        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
-        workLog: WorkLogDto
+        workLogform: WorkLogForm
     ): String {
-        workDayService.addWorkLog(workDayId, workLog)
-        return  "redirect:${editUrl(workDayId)}"
+        workDayService.addWorkLog(workLogform.workDayId!!, workLogform.toDto())
+        return  "redirect:${editUrl(workLogform.workDayId)}"
     }
 
     @PostMapping("/work-log/edit")
     fun editWorkLog(
-        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
-        workLog: WorkLogDto
+        workLogform: WorkLogForm
     ): String {
-        workDayService.editWorkLog(workDayId, workLog)
-        return  "redirect:${editUrl(workDayId)}"
+        workDayService.editWorkLog(workLogform.workDayId!!, workLogform.toDto())
+        return  "redirect:${editUrl(workLogform.workDayId)}"
     }
 
     @PostMapping("/work-log/delete")
@@ -142,4 +147,7 @@ class WorkDayEditController(
         workDayService.toggleExport(workDayId, workLogId)
         return "redirect:${editUrl(workDayId)}"
     }
+
+    private fun WorkLogForm.toDto() =
+        WorkLogDto(workLogId, jiraIssueId!!, JiraIssueTypeDto(jiraIssueType!!), started, ended, jiraIssiueName = jiraIssueName, jiraIssiueComment = jiraIssueComment )
 }

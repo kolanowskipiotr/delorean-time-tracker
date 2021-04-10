@@ -1,7 +1,9 @@
 package pko.delorean.time.tracker.domain;
 
 import pko.delorean.time.tracker.domain.dto.ExportableWorkLog;
+import pko.delorean.time.tracker.domain.summary.IssueSummary;
 import pko.delorean.time.tracker.kernel.Utils;
+import pko.delorean.time.tracker.ui.work.day.dto.JiraIssueTypeDto;
 import pko.delorean.time.tracker.ui.work.day.dto.WorkLogDto;
 
 import javax.persistence.*;
@@ -16,7 +18,6 @@ import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static pko.delorean.time.tracker.domain.WorkDayStatus.*;
@@ -157,6 +158,7 @@ public class WorkDay implements Serializable {
                 new WorkLogDto(
                         null,
                         it.getJiraId(),
+                        JiraIssueTypeDto.Companion.buildJava(it.getJiraIssueType().getValue()),
                         Utils.Companion.getTIME_FORMATTER().format(now),
                         null,
                         null,
@@ -177,8 +179,13 @@ public class WorkDay implements Serializable {
                 workLogDto.getJiraIssiueId(),
                 workLogDto.getJiraIssiueName(),
                 workLogDto.getJiraIssiueComment(),
-                Utils.Companion.buildDateTimeInstantEndOfDay(this.createDate)))
+                Utils.Companion.buildDateTimeInstantEndOfDay(this.createDate),
+                toDomainModel(workLogDto.getJiraIssueType())))
                 .ifPresent(workLogs::add);
+    }
+
+    private JiraIssueType toDomainModel(JiraIssueTypeDto jiraIssueType) {
+        return new JiraIssueType(jiraIssueType.getName());
     }
 
     public void editWorkLog(WorkLogDto workLogDto) {
@@ -193,6 +200,7 @@ public class WorkDay implements Serializable {
                         started,
                         ended,
                         workLogDto.getJiraIssiueId(),
+                        toDomainModel(workLogDto.getJiraIssueType()),
                         workLogDto.getJiraIssiueName(),
                         workLogDto.getJiraIssiueComment(),
                         endOfDay)));

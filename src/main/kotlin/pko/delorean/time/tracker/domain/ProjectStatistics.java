@@ -1,5 +1,6 @@
 package pko.delorean.time.tracker.domain;
 
+import pko.delorean.time.tracker.domain.statistics.IssueStatistics;
 import pko.delorean.time.tracker.kernel.Utils;
 
 import java.time.LocalDate;
