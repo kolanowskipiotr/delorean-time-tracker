@@ -2,6 +2,7 @@
 <#-- @ftlvariable name="template" type="pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto" -->
 
 <#include "/header.ftl">
+<#include "/macros/issue-utils.ftl">
 
 <@header "Work days"/>
 
@@ -80,7 +81,7 @@
                                 </ul>
                             </#if>
                         </td>
-                        <td>${workDay.state?html}</td>
+                        <td><@stateIcon workDay.state!?html/></td>
                         <td>
                             <div class="btn-toolbar" role="toolbar">
                                 <div class="btn-group mr-2" role="group">

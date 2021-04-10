@@ -90,7 +90,7 @@
                     <th>Duration</th>
                     <th>JIRA ID</th>
                     <th>JIRA Issue summary / Comment</th>
-                    <th>Status</th>
+                    <th>State</th>
                     <th style="width: 12%">Actions</th>
                 </tr>
                 </thead>
@@ -113,7 +113,7 @@
                                         </#if>
                                     </blockquote>
                                 </td>
-                                <td>${workLog.status!?html}</td>
+                                <td><@stateIcon workLog.status!?html/></td>
                                 <td>
                                     <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueType=${workLog.jiraIssueType.name?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}" role="button">✏️ Edit</a>
                                     <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "btn btn-danger" "/work-day/work-log/delete" "🗑️ Delete" />

@@ -11,3 +11,19 @@
         <@randomEmoji random type.name/>
     </#if>
 </#macro>
+
+<#macro stateIcon state>
+    <#switch state>
+        <#case "IN_PROGRESS">
+            <@emojiWithAlt "➡️" state/>
+            <#break>
+        <#case "STOPPED">
+            <@emojiWithAlt "⏹" state/>
+            <#break>
+        <#case "EXPORTED">
+            <@emojiWithAlt "✅" state/>
+            <#break>
+        <#default>
+            <@randomEmoji random state/>
+    </#switch>
+</#macro>
