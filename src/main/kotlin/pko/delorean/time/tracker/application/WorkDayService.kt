@@ -17,6 +17,7 @@ import pko.delorean.time.tracker.ui.jira.dto.JiraIssueTypeDto
 import pko.delorean.time.tracker.ui.work.day.dto.*
 import pko.delorean.time.tracker.ui.work.day.dto.statistics.IssueStatisticsDto
 import pko.delorean.time.tracker.ui.work.day.dto.statistics.ProjectStatisticsDto
+import pko.delorean.time.tracker.ui.work.day.dto.statistics.WorkDaysPeriodStatisticsDto
 import pko.delorean.time.tracker.ui.work.day.dto.summary.IssueSummaryDto
 import java.time.LocalDate
 
@@ -139,9 +140,9 @@ class WorkDayService @Autowired constructor(
     fun calculateStatistics(workDays: List<WorkDayDto>): WorkDaysPeriodStatisticsDto {
         val statistics = workDays.flatMap { it.projectsStatistics.orEmpty() }
             .groupBy { it.projectKey }
-            .map { it.key to it.value.map { projectStatistics ->  projectStatistics.duration }.sum() }
-            .toMap()
-        return WorkDaysPeriodStatisticsDto(statistics, statistics.map { it.value }.sum())
+            .map { ProjectStatisticsDto.fromMultipleStatistics(it.key, it.value) }
+            .sortedByDescending { it.duration }
+        return WorkDaysPeriodStatisticsDto(statistics, statistics.map { it.duration }.sum())
     }
 
     private fun WorkDay.toDto() =
@@ -150,7 +151,7 @@ class WorkDayService @Autowired constructor(
             createDate,
             status.name,
             duration,
-            statistics.map { it.toDto() },
+            statistics.map { it.toDto() }.sortedByDescending { it.duration },
             summary.map { it.toDto() },
             workLogs
                 .sortedBy { it.started }
@@ -176,7 +177,7 @@ class WorkDayService @Autowired constructor(
         IssueSummaryDto(jiraId, jiraIssues.map { it.toDto() })
 
     private fun ProjectStatistics.toDto() =
-        ProjectStatisticsDto(projectKey, duration, issuesStatistics.map { it.toDto() })
+        ProjectStatisticsDto(projectKey, duration, issuesStatistics.map { it.toDto() }.sortedByDescending { it.duration })
 
     private fun IssueStatistics.toDto() =
         IssueStatisticsDto(issueKey, duration, jiraIssues.map { it.toDto() })

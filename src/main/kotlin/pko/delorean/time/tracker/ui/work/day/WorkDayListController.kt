@@ -10,6 +10,7 @@ import pko.delorean.time.tracker.application.WorkDayService
 import pko.delorean.time.tracker.ui.work.day.dto.WorkDayDto
 import pko.delorean.time.tracker.ui.work.day.dto.WorkDaysFilterDto
 import pko.delorean.time.tracker.ui.work.day.form.WorkDaysFilterForm
+import java.util.*
 
 @Controller
 @RequestMapping("/work-day")
@@ -23,6 +24,8 @@ class WorkDayListController (
 
     @GetMapping("/list")
     fun showTemplates(model: Model, workDaysFilter: WorkDaysFilterForm): String {
+        model.addAttribute("random", Random())
+
         val filters = workDaysFilter.defaultIfNull()
         val workDays = workDayService.findWorkDays(filters.createDateStart!!, filters.createDateEnd!!)
         model.addAttribute("workDays", workDays)

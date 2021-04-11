@@ -2,6 +2,8 @@
 
 <#include "/header.ftl">
 <#include "/macros/issue-utils.ftl">
+<#include "/macros/project-utils.ftl">
+<#include "/macros/duration-utils.ftl">
 
 <@header "Work day: ${workDay.date}"/>
 
@@ -136,53 +138,17 @@
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1 font-weight-bold">Whole day</h5>
                         <small>
-                            <#if workDay.duration??>${workDay.duration}m (${(workDay.duration/60)?floor}h ${workDay.duration - ((workDay.duration/60)?floor * 60)}m)</#if>
-                            -
-                            100%
+                            <@duraton workDay.duration workDay.duration/>
                         </small>
                     </div>
                     <p class="mb-1">${workDay.date}</p>
                 </div>
                 <#if workDay.projectsStatistics??>
-                    <#list workDay.projectsStatistics as projectStatistics>
-                        <#assign projectDuration=projectStatistics.duration/>
-                        <li class="list-group-item list-group-item-action flex-column align-items-start py-1">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="my-1 w-75 font-weight-bold">${projectStatistics.projectKey}</h5>
-                                <small>
-                                    <#if projectDuration??>${projectDuration}m (${(projectDuration/60)?floor}h ${projectDuration - ((projectDuration/60)?floor * 60)}m)</#if>
-                                    -
-                                    <#if workDay.duration gt 0 >${projectDuration/workDay.duration*100}<#else>0</#if>%
-                                </small>
-                            </div>
-                            <ul class="list-group">
-                                <#list projectStatistics.issuesStatistics as issueStatistics>
-                                    <#assign issiueDuration=issueStatistics.duration/>
-                                    <li class="list-group-item list-group-item-action flex-column align-items-start py-1">
-                                        <div class="d-flex w-100 justify-content-between my-0">
-                                            <blockquote class="blockquote my-0"w-75>
-                                                <footer class="blockquote-footer">
-                                                    <@issueLink issueStatistics.issueKey jiraUrl/>:
-                                                    <#list issueStatistics.distinctJiraIssuesByName() as jiraIssue>
-                                                        <@issueType jiraIssue.jiraIssueType/> ${jiraIssue.jiraName?html}
-                                                        <#if jiraIssue_has_next>, </#if>
-                                                    </#list>
-                                                </footer>
-                                            </blockquote>
-                                            <small>
-                                                <#if issiueDuration??>${issiueDuration}m (${(issiueDuration/60)?floor}h ${issiueDuration - ((issiueDuration/60)?floor * 60)}m)</#if>
-                                                -
-                                                <#if workDay.duration gt 0 >${issiueDuration/workDay.duration*100}<#else>0</#if>%
-                                            </small>
-                                        </div>
-                                    </li>
-                                </#list>
-                            </ul>
-                        </li>
-                    </#list>
+                    <@projectsStatistics workDay.projectsStatistics workDay.duration/>
                 </#if>
-            </div>
+            </ul>
         </div>
+    </div>
 
 
     <#macro workDaySummary workDayToPresent>

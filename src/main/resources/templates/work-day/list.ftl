@@ -3,6 +3,8 @@
 
 <#include "/header.ftl">
 <#include "/macros/issue-utils.ftl">
+<#include "/macros/project-utils.ftl">
+<#include "/macros/duration-utils.ftl">
 
 <@header "Work days"/>
 
@@ -100,30 +102,22 @@
     </div>
 
     <div class="card">
-        <div class="card-body">
+        <ul class="card-body">
             <h3 class="card-title">Statistics:</h3>
 
-            <div class="list-group">
+            <ul class="list-group">
                 <div class="list-group-item list-group-item-action flex-column align-items-start active py-2">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">Period ${filters.createDateStart} - ${filters.createDateEnd} </h5>
-                        <small>100%</small>
+                        <small>
+                            <@duraton periodStatistics.duration periodStatistics.duration/>
+                        </small>
                     </div>
-                    <p class="mb-1"><#if periodStatistics.duration??>${periodStatistics.duration}m (${(periodStatistics.duration/60)?floor}h ${periodStatistics.duration - ((periodStatistics.duration/60)?floor * 60)}m)</#if></p>
                 </div>
                 <#if periodStatistics.statistics??>
-                    <#list periodStatistics.statistics?keys as key>
-                        <#assign val=periodStatistics.statistics[key]/>
-                        <div class="list-group-item list-group-item-action flex-column align-items-start py-2">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h5 class="mb-1">${key}</h5>
-                                <small><#if periodStatistics.duration gt 0 >${val/periodStatistics.duration*100}<#else>0</#if>%</small>
-                            </div>
-                            <p class="mb-1"><#if val??>${val}m (${(val/60)?floor}h ${val - ((val/60)?floor * 60)}m)</#if></p>
-                        </div>
-                    </#list>
+                    <@projectsStatistics periodStatistics.statistics periodStatistics.duration/>
                 </#if>
-            </div>
+            </ul>
         </div>
     </div>
 </div> <!-- /container -->
