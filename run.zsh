@@ -3,6 +3,6 @@
 #. {PATH_TO_THIS_FILE}
 
 function dtt {
-	cd /home/pkolanow/personal-workspace/delorean-time-tracker-RELEASES/delorean-time-tracker-1.3.1-SNAPSHOT
-    java -jar delorean-time-tracker-1.3.1-SNAPSHOT.jar &
+	cd /home/pkolanow/personal-workspace/delorean-time-tracker-RELEASES/delorean-time-tracker-2.0.0
+    java -jar delorean-time-tracker-2.0.0.jar &
 }
