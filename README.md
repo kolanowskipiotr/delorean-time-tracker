@@ -5,11 +5,19 @@
 ## How to run
 ### Download latest version
 https://github.com/kolanowskipiotr/delorean-time-tracker/releases
-### Run on Windows
+### On Windows
 Use `run.bat`.
-### Run on Linux
+### On Linux
 1. Use `java -jar delorean-time-tracke-{VERSION}.jar` in your favorite terminal.
 1. Then open `http://localhost:9889` in your favorite browser.
+
+## How to turn off
+### On Linux
+1. Run `sudo ps -aux | grep delorean`
+1. Find process id.
+1. Run `kill {process id}`
+### On Windows
+Find delorean process and kill it.
 
 ## Package
 1. mvn package
