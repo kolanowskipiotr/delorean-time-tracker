@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
+import jdk.internal.joptsimple.internal.Strings.EMPTY
 
 @Repository
 @ApplicationScope
@@ -170,13 +171,19 @@ class JiraService {
     }
 
     private fun buildExportedWorkLogsMessage(exportableWorkLogs: Set<ExportableWorkLog>, exportedWorkLogIds: MutableList<Long>) =
-        "Exported: " + exportableWorkLogs
-            .filter { exportableWorkLog -> exportedWorkLogIds.contains(exportableWorkLog.worklog.id) }
-            .map { it.worklog.jiraId }
-            .joinToString(", ")
+        if(exportedWorkLogIds.isNotEmpty())
+            "Exported: " + exportableWorkLogs
+                .filter { exportableWorkLog -> exportedWorkLogIds.contains(exportableWorkLog.worklog.id) }
+                .map { it.worklog.jiraId }
+                .joinToString(", ")
+        else
+            EMPTY
 
     private fun buildUnexportedWorklogsMessage(unexportedWorkLOgs: MutableList<ExportableWorkLog>) =
-        "Export manually or try again: " + unexportedWorkLOgs.map { it.unexportedMessage() }.joinToString { ", " }
+        if(unexportedWorkLOgs.isNotEmpty())
+            "Export manually or try again: " + unexportedWorkLOgs.map { it.unexportedMessage() }.joinToString { ", " }
+        else
+            EMPTY
 
     private fun ExportableWorkLog.unexportedMessage(): String {
         val defaultWorkLogEnd = buildDateTimeInstant(this.date, now().truncatedTo(MINUTES))
