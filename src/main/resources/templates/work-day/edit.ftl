@@ -11,6 +11,7 @@
     <h1>Work day: ${workDay.date}</h1>
     <nav class="navbar navbar-light bg-light justify-content-between" style="background-color: #e3f2fd;">
         <a class="navbar-brand">Navigation</a>
+        <a class="btn btn-outline-success" href="/jira/credentials/edit" role="button">🔑 Jira credentials</a>
         <a class="btn btn-outline-success" href="/work-day/list" role="button">📅 Work days</a>
     </nav>
 

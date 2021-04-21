@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
-import jdk.internal.joptsimple.internal.Strings.EMPTY
+import org.apache.commons.lang3.StringUtils.EMPTY
 
 @Repository
 @ApplicationScope
@@ -181,7 +181,7 @@ class JiraService {
 
     private fun buildUnexportedWorklogsMessage(unexportedWorkLOgs: MutableList<ExportableWorkLog>) =
         if(unexportedWorkLOgs.isNotEmpty())
-            "Export manually or try again: " + unexportedWorkLOgs.map { it.unexportedMessage() }.joinToString { ", " }
+            "Export manually or try again: " + unexportedWorkLOgs.map { it.unexportedMessage() }.joinToString()
         else
             EMPTY
 
