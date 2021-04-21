@@ -32,7 +32,6 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 
-
 @Repository
 @ApplicationScope
 class JiraService {
@@ -61,10 +60,15 @@ class JiraService {
 
     fun exportWorkDay(exportableWorkLogs: Set<ExportableWorkLog>): ConnectionResult<List<Long>> {
         val exportedWorkLogIds = mutableListOf<Long>()
+        val unexportedWorkLOgs = mutableListOf<ExportableWorkLog>()
         try {
             val restClient: JiraRestClient = buildJiraClient()
-            exportableWorkLogs.forEach { exportableWorkLog ->
-                exportedWorkLogIds.add(exportWorkLog(restClient, exportableWorkLog))
+            exportableWorkLogs.forEach { exportableWorkLog: ExportableWorkLog ->
+                val workLogExportResult = exportWorkLog(restClient, exportableWorkLog)
+                when(workLogExportResult.success) {
+                    true -> exportedWorkLogIds.add(workLogExportResult.value!!)
+                    false -> unexportedWorkLOgs.add(exportableWorkLog)
+                }
             }
             restClient.close()
         } catch (e: Exception) { //FIXME: Catch only important exceptions
@@ -73,10 +77,8 @@ class JiraService {
         }
         return ConnectionResult.success(
             exportedWorkLogIds,
-            exportableWorkLogs
-                .filter { exportableWorkLog -> exportedWorkLogIds.contains(exportableWorkLog.worklog.id) }
-                .map { "${it.worklog.jiraId} - ${it.comment}" }
-                .joinToString("<br>" )
+            buildUnexportedWorklogsMessage(unexportedWorkLOgs) + "<br>" +
+                    buildExportedWorkLogsMessage(exportableWorkLogs, exportedWorkLogIds)
         )
     }
 
@@ -102,6 +104,7 @@ class JiraService {
 
     fun getIssueTypesCached(): IssiueTypes =
         getIssueTypesCache.get("getIssueTypes")
+
     private var getIssueTypesCache: LoadingCache<String, IssiueTypes> =
         CacheBuilder.newBuilder()
             .maximumSize(1)
@@ -143,24 +146,41 @@ class JiraService {
             .map { it.key }
             .map { it.toUpperCase() }
 
-    private fun exportWorkLog(restClient: JiraRestClient, exportableWorkLog: ExportableWorkLog): Long {
-        val workLog = exportableWorkLog.worklog
-        val issueClient = restClient.issueClient
-        val issue = issueClient.getIssue(workLog.jiraId).claim()
+    private fun exportWorkLog(restClient: JiraRestClient, exportableWorkLog: ExportableWorkLog): ConnectionResult<Long> {
+        try {
+            val workLog = exportableWorkLog.worklog
+            val issueClient = restClient.issueClient
+            val issue = issueClient.getIssue(workLog.jiraId).claim()
 
-        val worklogInput = WorklogInputBuilder(issue.self)
-            .setStartDate(exportableWorkLog.date.toDateTime())
-            .setComment(exportableWorkLog.comment)
-            .setMinutesSpent(
-                exportableWorkLog.worklog.getDuration(
-                    buildDateTimeInstant(exportableWorkLog.date, now().truncatedTo(MINUTES))
-                ).toInt()
-            )
-            .build()
-        val result = issueClient.addWorklog(issue.worklogUri, worklogInput)
-        result.claim()
+            val defaultWorkLogEnd = buildDateTimeInstant(exportableWorkLog.date, now().truncatedTo(MINUTES))
+            val worklogInput = WorklogInputBuilder(issue.self)
+                .setStartDate(exportableWorkLog.date.toDateTime())
+                .setComment(exportableWorkLog.comment)
+                .setMinutesSpent(
+                    (exportableWorkLog.worklog.getDuration(defaultWorkLogEnd) + exportableWorkLog.breakDurationInMinutes).toInt()
+                )
+                .build()
+            val result = issueClient.addWorklog(issue.worklogUri, worklogInput)
+            result.claim()
+            return ConnectionResult.success(workLog.id)
+        } catch (e: Exception) { //FIXME: Catch only important exceptions
+            logger.error(e.message, e)
+            return ConnectionResult.error()
+        }
+    }
 
-        return workLog.id
+    private fun buildExportedWorkLogsMessage(exportableWorkLogs: Set<ExportableWorkLog>, exportedWorkLogIds: MutableList<Long>) =
+        "Exported: " + exportableWorkLogs
+            .filter { exportableWorkLog -> exportedWorkLogIds.contains(exportableWorkLog.worklog.id) }
+            .map { it.worklog.jiraId }
+            .joinToString(", ")
+
+    private fun buildUnexportedWorklogsMessage(unexportedWorkLOgs: MutableList<ExportableWorkLog>) =
+        "Export manually or try again: " + unexportedWorkLOgs.map { it.unexportedMessage() }.joinToString { ", " }
+
+    private fun ExportableWorkLog.unexportedMessage(): String {
+        val defaultWorkLogEnd = buildDateTimeInstant(this.date, now().truncatedTo(MINUTES))
+        return this.worklog.jiraId + " " + (this.worklog.getDuration(defaultWorkLogEnd) + this.breakDurationInMinutes).toInt() + "m"
     }
 
     private fun LocalDate.toDateTime(): DateTime? {
@@ -220,11 +240,11 @@ class JiraService {
         val message: String? = null
     ) {
         companion object {
-            fun <V> error(value: V?, message: String? = null) =
-                ConnectionResult(false, value, StringUtils.abbreviate(message, 200))
+            fun <V> error(value: V? = null, message: String? = null) =
+                ConnectionResult(false, value, StringUtils.abbreviate(message, 1380))
 
             fun <V> success(value: V?, message: String? = null) =
-                ConnectionResult(true, value, StringUtils.abbreviate(message, 200))
+                ConnectionResult(true, value, StringUtils.abbreviate(message, 1380))
         }
     }
 

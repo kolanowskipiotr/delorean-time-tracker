@@ -1,6 +1,7 @@
 package pko.delorean.time.tracker.ui.work.day.dto.summary
 
 import pko.delorean.time.tracker.ui.work.day.dto.JiraIssueTypeDto
+import pko.delorean.time.tracker.ui.work.day.dto.WorkLogTypeDto
 
 data class IssueSummaryDto(
     val jiraId: String,
@@ -16,5 +17,6 @@ data class IssueSummaryDto(
 data class JiraIssueDto(
     val jiraName: String,
     val jiraIssueType: JiraIssueTypeDto,
+    val workLogType: WorkLogTypeDto,
     val jiraComment: String? = null
 )

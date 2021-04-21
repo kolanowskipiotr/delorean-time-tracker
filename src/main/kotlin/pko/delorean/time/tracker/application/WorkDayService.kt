@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import pko.delorean.time.tracker.domain.*
+import pko.delorean.time.tracker.domain.dto.ExportableWorkLog
 import pko.delorean.time.tracker.domain.statistics.IssueStatistics
 import pko.delorean.time.tracker.domain.summary.IssueSummary
 import pko.delorean.time.tracker.infrastructure.JiraService
@@ -86,6 +87,13 @@ class WorkDayService @Autowired constructor(
     }
 
     @Transactional
+    fun addBreak(workDayId: Long, breakType: WorkLogTypeDto) {
+        val workDay = workDayJpaRepository.getOne(workDayId)
+        workDay.addBreak(breakType)
+        workDayJpaRepository.saveAndFlush(workDay)
+    }
+
+    @Transactional
     fun editWorkLog(workDayId: Long, workLogDto: WorkLogDto) {
         val workDay = workDayJpaRepository.getOne(workDayId)
         workDay.editWorkLog(workLogDto)
@@ -114,17 +122,30 @@ class WorkDayService @Autowired constructor(
     }
 
     @Transactional
-    fun continueWorkLog(workDayId: Long, workLogId: Long) {
+    fun continueWorkLog(workDayId: Long) {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        workDay.continueTracking(workLogId)
+        workDay.continueTracking()
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
-    @Transactional
     fun exportWorkDay(workDayId: Long): ConnectionResult<List<Long>> {
+        val unexportedWorkLogs = stopTracking(workDayId)
+        return exportWorkLogs(workDayId, unexportedWorkLogs)
+    }
+
+    @Transactional
+    fun stopTracking(workDayId: Long): Set<ExportableWorkLog> {
         val workDay = workDayJpaRepository.getOne(workDayId)
         workDay.stopTracking()
-        val exportStatus = jiraService.exportWorkDay(workDay.unexportedWorkLogs)
+        return workDay.calculteUnexportedWorkLogs().also {
+            workDayJpaRepository.saveAndFlush(workDay)
+        }
+    }
+
+    @Transactional
+    fun exportWorkLogs(workDayId: Long, unexportedWorkLogs: Set<ExportableWorkLog>): ConnectionResult<List<Long>> {
+        val workDay = workDayJpaRepository.getOne(workDayId)
+        val exportStatus = jiraService.exportWorkDay(unexportedWorkLogs)
         workDay.markExported(exportStatus.value.orEmpty())
         workDayJpaRepository.saveAndFlush(workDay)
         return exportStatus
@@ -161,10 +182,12 @@ class WorkDayService @Autowired constructor(
     private fun WorkLog.toDto(workDay: WorkDay) =
         WorkLogDto(
             id,
+            type.toDto(),
             jiraId,
             jiraIssueType.toDto(),
             formatTime(started),
             formatTime(ended),
+            `break`,
             workLogDuration(this, workDay.createDate),
             jiraName,
             comment,
@@ -183,10 +206,10 @@ class WorkDayService @Autowired constructor(
         IssueStatisticsDto(issueKey, duration, jiraIssues.map { it.toDto() })
 
     private fun pko.delorean.time.tracker.domain.statistics.JiraIssue.toDto() =
-        pko.delorean.time.tracker.ui.work.day.dto.statistics.JiraIssueDto(jiraName, jiraIssueType.toDto())
+        pko.delorean.time.tracker.ui.work.day.dto.statistics.JiraIssueDto(jiraName, jiraIssueType.toDto(), workLogType.toDto())
 
     private fun pko.delorean.time.tracker.domain.summary.JiraIssue.toDto() =
-        pko.delorean.time.tracker.ui.work.day.dto.summary.JiraIssueDto(jiraName, jiraIssueType.toDto(), jiraComment)
+        pko.delorean.time.tracker.ui.work.day.dto.summary.JiraIssueDto(jiraName, jiraIssueType.toDto(), workLogType.toDto(), jiraComment)
 
     private fun JiraIssueType.toDto() =
         jiraService.getIssueType(value).toDto()
@@ -196,5 +219,13 @@ class WorkDayService @Autowired constructor(
 
     private fun JiraIssueTypeDto.toDto() =
         pko.delorean.time.tracker.ui.work.day.dto.JiraIssueTypeDto(name, self, id, iconUri, description, subtask)
+
+    private fun WorkLogType.toDto() =
+        when(this){
+            WorkLogType.WORK_LOG -> WorkLogTypeDto.WORK_LOG
+            WorkLogType.BREAK -> WorkLogTypeDto.BREAK
+            WorkLogType.WORK_ORGANIZATION -> WorkLogTypeDto.WORK_ORGANIZATION
+            WorkLogType.PRIVATE_WORK_LOG -> WorkLogTypeDto.PRIVATE_WORK_LOG
+        }
 }
 

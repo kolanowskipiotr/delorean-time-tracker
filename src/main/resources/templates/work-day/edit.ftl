@@ -35,7 +35,16 @@
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary">💾 Chanege date</button>
                         <a class="ml-2 btn btn-primary" href="/work-day/export?workDayId=${workDay.id?c}" role="button">📤 Export to JIRA</a>
-                        <a class="ml-2 btn btn-danger" href="/work-day/stop?workDayId=${workDay.id?c}" role="button">⏹️ Stop tracking</a>
+                        <#if workDay.state == "IN_PROGRESS">
+                            <a class="ml-2 btn btn-danger" href="/work-day/stop?workDayId=${workDay.id?c}" role="button">⏹️ Stop tracking</a>
+                        <#elseif workDay.state == "STOPPED">
+                            <a class="ml-2 btn btn-primary" href="/work-day/work-log/continue?workDayId=${workDay.id?c}" role="button">➡ Continue</a>
+                        <#else>
+                            <@stateIcon workDay.state!?html "ml-2 btn btn-info" workDay.state!?html?replace("_", " ")?capitalize/>
+                        </#if>
+                        <a class="ml-2 btn btn-success"     href="/work-day/break?workDayId=${workDay.id?c}&breakType=BREAK"                role="button">🏖 Start break</a>
+                        <a class="ml-2 btn btn-secondary"   href="/work-day/break?workDayId=${workDay.id?c}&breakType=WORK_ORGANIZATION"    role="button">🗄 Start work organization</a>
+                        <a class="ml-2 btn btn-info"        href="/work-day/break?workDayId=${workDay.id?c}&breakType=PRIVATE_WORK_LOG"     role="button">🏡 Start private time</a>
                     </div>
                 </div>
             </form>
@@ -68,7 +77,6 @@
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary">💾 Save</button>
                             <a class="ml-2 btn btn-primary" href="/work-day/work-log/start?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button">▶ Start new like this</a>
-                            <a class="ml-2 btn btn-primary<#if !workDay.workLogs?has_content || workDay.workLogs?last.id != searchedWorkLogId> disabled</#if>" href="/work-day/work-log/continue?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button">➡ Continue</a>
                             <a class="ml-2 btn btn-primary" href="/work-day/work-log/export/toggle?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button"><#if searchedWorkLogStatus == "EXPORTED">🔓 Enable export to JIRA<#else>🔒 Disable export to JIRA</#if></a>
                             <a class="ml-2 btn btn-warning" href="/work-day/edit?workDayId=${workDay.id?c}" role="button">❌️ Cancel</a>
                         </div>
@@ -105,10 +113,21 @@
                                 <td>${workLog_index +1}</td>
                                 <td>${workLog.started!?html}</td>
                                 <td>${workLog.ended!?html}</td>
-                                <td class="text-center"><#if workLog.duration??>${workLog.duration}m<br>(${(workLog.duration/60)?floor}h ${workLog.duration - ((workLog.duration/60)?floor * 60)}m)</#if> </td>
-                                <td><@issueLink workLog.jiraIssiueId jiraUrl/></td>
+                                <td class="text-center">
+                                    <#if workLog.duration??>
+                                        <@duraton workLog.duration/>
+                                    </#if>
+                                    <#if workLog.breakTime?? && workLog.breakTime gt 0 >
+                                        <br><small> + 🏖/🗄 <@duraton workLog.breakTime/></small>
+                                    </#if>
+                                </td>
                                 <td>
-                                    <@issueType workLog.jiraIssueType/> ${workLog.jiraIssiueName!?html}
+                                    <#if workLog.type == "WORK_LOG">
+                                        <small><@issueLink workLog.jiraIssiueId jiraUrl/></small>
+                                    </#if>
+                                </td>
+                                <td>
+                                    <@issueType workLog.jiraIssueType workLog.type/> ${workLog.jiraIssiueName!?html}
                                     <blockquote class="blockquote">
                                         <#if workLog.jiraIssiueComment?has_content >
                                             <footer class="blockquote-footer float-right">${workLog.jiraIssiueComment!?html}</footer>
@@ -117,8 +136,8 @@
                                 </td>
                                 <td><@stateIcon workLog.status!?html/></td>
                                 <td>
-                                    <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueType=${workLog.jiraIssueType.name?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}" role="button">✏️ Edit</a>
-                                    <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "btn btn-danger" "/work-day/work-log/delete" "🗑️ Delete" />
+                                    <a class="btn btn-primary btn-sm" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueType=${workLog.jiraIssueType.name?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}" role="button">✏️ Edit</a>
+                                    <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "my-1 btn btn-danger btn-sm" "/work-day/work-log/delete" "🗑️ Delete" />
                                 </td>
                             </tr>
                         </#list>
@@ -161,7 +180,24 @@
                             <h5 class="my-1 w-75">
                                 <ul class="list-group">
                                     <#list issueSummary.distinctJiraIssuesByName() as jiraIssue>
-                                        <li class="list-group-item border-0 active py-1"><@issueType jiraIssue.jiraIssueType/> ${jiraIssue.jiraName?html}</li>
+                                        <li class="list-group-item border-0
+                                            <#if jiraIssue.workLogType == "WORK_LOG">
+                                                active
+                                            <#elseif jiraIssue.workLogType == "BREAK">
+                                                list-group-item-success
+                                            <#elseif jiraIssue.workLogType == "WORK_ORGANIZATION">
+                                                list-group-item-secondary
+                                            <#elseif jiraIssue.workLogType == "PRIVATE_WORK_LOG">
+                                                list-group-item-info
+                                            </#if>
+                                            py-1">
+                                            <#local jiraNameWithIcon><@issueType jiraIssue.jiraIssueType jiraIssue.workLogType/> ${jiraIssue.jiraName?html}</#local>
+                                            <#if jiraIssue.workLogType == "WORK_LOG">
+                                                ${jiraNameWithIcon}
+                                            <#else>
+                                                <small>${jiraNameWithIcon}</small>
+                                            </#if>
+                                        </li>
                                     </#list>
                                 </ul>
                             </h5>
@@ -173,9 +209,15 @@
                             <#list issueSummary.distinctJiraIssuesByComment() as jiraIssue>
                                 <#if jiraIssue.jiraComment?has_content >
                                     <li class="list-group-item py-1">
-                                        <blockquote class="blockquote my-0">
-                                            <footer class="blockquote-footer">${jiraIssue.jiraComment?html}</footer>
-                                        </blockquote>
+                                    <blockquote class="blockquote my-0">
+                                        <footer class="blockquote-footer">
+                                            <#if jiraIssue.workLogType == "WORK_LOG">
+                                                ${jiraIssue.jiraComment?html}
+                                            <#else>
+                                                <small>${jiraIssue.jiraComment?html}</small>
+                                            </#if>
+                                        </footer>
+                                    </blockquote>
                                     </li>
                                 </#if>
                             </#list>

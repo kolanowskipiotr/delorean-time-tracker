@@ -66,4 +66,20 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="add worklog type" author="pko">
+        <addColumn tableName="work_logs">
+            <column name="type" type="varchar(255)" defaultValue="WORK_LOG">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="add break to work log" author="pko">
+        <addColumn tableName="work_logs">
+            <column name="break_in_minutes" type="bigint" defaultValue="0">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

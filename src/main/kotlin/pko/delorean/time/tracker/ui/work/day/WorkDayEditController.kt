@@ -8,11 +8,12 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import pko.delorean.time.tracker.application.WorkDayService
-import pko.delorean.time.tracker.domain.JiraIssueType
 import pko.delorean.time.tracker.infrastructure.JiraService
 import pko.delorean.time.tracker.ui.work.day.dto.JiraIssueTypeDto
 import pko.delorean.time.tracker.ui.work.day.dto.WorkLogDto
+import pko.delorean.time.tracker.ui.work.day.dto.WorkLogTypeDto
 import pko.delorean.time.tracker.ui.work.day.form.WorkLogForm
+import pko.delorean.time.tracker.ui.work.day.form.WorkLogTypeForm
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
@@ -104,6 +105,15 @@ class WorkDayEditController(
         return  "redirect:${editUrl(workLogform.workDayId)}"
     }
 
+    @GetMapping("/break")//FIXME: This should be POST
+    fun addBreak(
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
+        @RequestParam(name = "breakType") breakType: WorkLogTypeForm
+    ): String {
+        workDayService.addBreak(workDayId, breakType.toDto())
+        return  "redirect:${editUrl(workDayId)}"
+    }
+
     @PostMapping("/work-log/edit")
     fun editWorkLog(
         workLogform: WorkLogForm
@@ -132,10 +142,9 @@ class WorkDayEditController(
 
     @GetMapping("/work-log/continue")//FIXME: This should be Patch
     fun continueWorkLog(
-        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
-        @RequestParam(name = "workLogId") workLogId: Long
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long
     ): String {
-        workDayService.continueWorkLog(workDayId, workLogId)
+        workDayService.continueWorkLog(workDayId)
         return  "redirect:${editUrl(workDayId)}"
     }
 
@@ -149,5 +158,14 @@ class WorkDayEditController(
     }
 
     private fun WorkLogForm.toDto() =
-        WorkLogDto(workLogId, jiraIssueId!!, JiraIssueTypeDto(jiraIssueType!!), started, ended, jiraIssiueName = jiraIssueName, jiraIssiueComment = jiraIssueComment )
+        WorkLogDto(workLogId, type.toDto(), jiraIssueId!!, JiraIssueTypeDto(jiraIssueType!!), started, ended, jiraIssiueName = jiraIssueName, jiraIssiueComment = jiraIssueComment )
 }
+
+private fun WorkLogTypeForm?.toDto() =
+    when(this){
+        WorkLogTypeForm.WORK_LOG -> WorkLogTypeDto.WORK_LOG
+        WorkLogTypeForm.BREAK -> WorkLogTypeDto.BREAK
+        WorkLogTypeForm.WORK_ORGANIZATION -> WorkLogTypeDto.WORK_ORGANIZATION
+        WorkLogTypeForm.PRIVATE_WORK_LOG -> WorkLogTypeDto.PRIVATE_WORK_LOG
+        null -> WorkLogTypeDto.WORK_LOG
+    }

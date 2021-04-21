@@ -22,7 +22,7 @@ public class IssueStatistics {
         this.duration = Utils.Companion.sumDurations(workLogs, workDayDate);
         this.jiraIssues = emptyIfNull(workLogs).stream()
                 .sorted(comparing(WorkLog::getStarted))
-                .map(workLog -> new JiraIssue(workLog.getJiraName(), workLog.getJiraIssueType()))
+                .map(workLog -> new JiraIssue(workLog.getJiraName(), workLog.getJiraIssueType(), workLog.getType()))
                 .collect(Collectors.toSet());
     }
 

@@ -19,8 +19,8 @@ public class IssueSummary {
     public IssueSummary(String jiraId, List<WorkLog> workLogs) {
         this.jiraId = jiraId;
         this.jiraIssues = emptyIfNull(workLogs).stream()
-                .sorted(comparing(WorkLog::getStarted))
-                .map(workLog -> new JiraIssue(workLog.getJiraName() , workLog.getJiraIssueType(), workLog.getComment()))
+                .sorted(comparing(WorkLog::getStarted).reversed())
+                .map(workLog -> new JiraIssue(workLog.getJiraName() , workLog.getJiraIssueType(), workLog.getType(), workLog.getComment()))
                 .collect(Collectors.toSet());
         this.ordering = emptyIfNull(workLogs).stream()
                 .sorted(comparing(WorkLog::getStarted).reversed())

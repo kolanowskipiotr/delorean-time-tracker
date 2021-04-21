@@ -11,6 +11,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static pko.delorean.time.tracker.domain.WorkDayStatus.EXPORTED;
+import static pko.delorean.time.tracker.domain.WorkDayStatus.UNEXPORTABLE;
 
 /**
  * A WorkLog.
@@ -51,8 +53,15 @@ public class WorkLog implements Serializable {
     @Column(name = "status")
     private WorkDayStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private WorkLogType type;
+
     @Embedded
     private JiraIssueType jiraIssueType;
+
+    @Column(name = "break_In_minutes")
+    private Long breakInMinutes;
 
     //Hibernate need this
     public WorkLog() {
@@ -60,14 +69,20 @@ public class WorkLog implements Serializable {
 
     public WorkLog(
             WorkDay workDay,
+            WorkLogType type,
             Instant started,
             Instant ended,
             String jiraIssueId,
+            JiraIssueType jiraIssueType,
             String jiraIssueName,
             String jiraIssueComment,
-            Instant endOfDay,
-            JiraIssueType jiraIssueType) {
+            Instant endOfDay) {
         this.workDay = workDay;
+        this.type = type;
+        if(type.isUnexportable()){
+            status = UNEXPORTABLE;
+        }
+        this.breakInMinutes = 0L;
         updateState(started, ended, jiraIssueId, jiraIssueType, jiraIssueName, jiraIssueComment, endOfDay);
     }
 
@@ -75,23 +90,44 @@ public class WorkLog implements Serializable {
         return id;
     }
 
+    public WorkLogType getType() {
+        return type;
+    }
+
+    boolean isDividable() {
+        return type.isDividable();
+    }
+
+    public boolean isUndividable(){
+        return type.isUndividable();
+    }
+
+    boolean isExportable() {
+        return type.isExportable();
+    }
+
+    public boolean isUnexportable(){
+        return type.isUnexportable();
+    }
+
     public WorkDayStatus getStatus() {
         return status;
     }
 
     public void markExported() {
-        this.status = WorkDayStatus.EXPORTED;
+        changeStatus(EXPORTED);
     }
+
     public void markUnexported() {
-        if(this.isEnded()){
-            this.status = WorkDayStatus.STOPPED;
-        } else {
-            this.status = WorkDayStatus.IN_PROGRESS;
-        }
+            if (this.isEnded()) {
+                changeStatus(WorkDayStatus.STOPPED);
+            } else {
+                changeStatus(WorkDayStatus.IN_PROGRESS);
+            }
     }
 
     public boolean isExported() {
-        return this.status == WorkDayStatus.EXPORTED;
+        return this.status == EXPORTED;
     }
 
     public boolean isUnexported() {
@@ -125,6 +161,13 @@ public class WorkLog implements Serializable {
     public long getDuration(Instant endedDefault) {
         Duration duration = Duration.between(started, (ended == null ? endedDefault : ended));
         return duration.toMinutes();
+    }
+
+    public Long getBreak(){
+        return breakInMinutes;
+    }
+    public void addBreak(Long minutes) {
+        this.breakInMinutes += minutes;
     }
 
     @VisibleForTesting
@@ -164,19 +207,32 @@ public class WorkLog implements Serializable {
     void end(Instant endAt, Instant endOfDay) {
         if (endAt != null) {
             this.ended = this.started.isAfter(endAt) ? endOfDay : endAt;
-            this.status = WorkDayStatus.STOPPED;
+            changeStatus(WorkDayStatus.STOPPED);
         }
     }
 
     void start(Instant startedAt) {
         this.started = startedAt;
         this.ended = null;
-        this.status = WorkDayStatus.IN_PROGRESS;
+        changeStatus(WorkDayStatus.IN_PROGRESS);
     }
 
     void contiune() {
         this.ended = null;
-        this.status = WorkDayStatus.IN_PROGRESS;
+        changeStatus(WorkDayStatus.IN_PROGRESS);
+    }
+
+    void changeDate(LocalDate date) {
+        this.started = Utils.Companion.buildDateTimeInstant(date, this.started);
+        if(isEnded()) {
+            this.ended = Utils.Companion.buildDateTimeInstant(date, this.ended);
+        }
+    }
+
+    private void changeStatus(WorkDayStatus status){
+        if(type.isExportable()) {
+            this.status = status;
+        }
     }
 
     @Override
@@ -191,15 +247,8 @@ public class WorkLog implements Serializable {
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode() {//FIXME: This is wrong
         return 31;
-    }
-
-    void changeDate(LocalDate date) {
-        this.started = Utils.Companion.buildDateTimeInstant(date, this.started);
-        if(isEnded()) {
-            this.ended = Utils.Companion.buildDateTimeInstant(date, this.ended);
-        }
     }
 
     // prettier-ignore

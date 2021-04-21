@@ -5,6 +5,7 @@ import java.time.LocalDate
 
 data class ExportableWorkLog(
     val worklog: WorkLog,
+    val breakDurationInMinutes: Long,
     val comment: String,
     val date: LocalDate
 ) {

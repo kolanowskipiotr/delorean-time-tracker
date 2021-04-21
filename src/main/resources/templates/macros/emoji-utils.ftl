@@ -29,8 +29,8 @@
 '☀️', '🏖️', '🏝️', '🐬', '🦇', '🐸', '🕷️', '🦑', '🐠', '🐡', '🐟','🐙', '🦈', '🐚','🐳', '🌊', '☁️', '🌙', '🍋', '⛅',
 '🌞', '🌻', '🌤️', '🌇', '🏝️', '🐦', '🌲', '🌴', '⛲', '⛱️', '🏕️', '🏔️', '🌅', '🙅', '🌋', '🌄']>
 
-<#macro emojiWithAlt emoji, altText>
-    <a title="${altText?html}">
-        ${emoji}
+<#macro emojiWithAlt emoji, altText, class = "", text = "">
+    <a <#if class?has_content>class="${class}"</#if> title="${altText?html}">
+        ${emoji}<#if text?has_content> ${text}</#if>
     </a>
 </#macro>

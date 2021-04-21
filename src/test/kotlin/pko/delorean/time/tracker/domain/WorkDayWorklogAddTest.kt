@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import pko.delorean.time.tracker.ui.work.day.dto.JiraIssueTypeDto
 import pko.delorean.time.tracker.ui.work.day.dto.WorkLogDto
+import pko.delorean.time.tracker.ui.work.day.dto.WorkLogTypeDto.WORK_LOG
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -16,12 +17,12 @@ internal class WorkDayWorklogAddTest {
     fun `should adjust neighbours`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(2L, "2", JiraIssueTypeDto("Task"), "04:00"))
-        addWorklog(workDay, WorkLogDto(3L, "3", JiraIssueTypeDto("Task"), "06:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"),"02:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, "2", JiraIssueTypeDto("Task"), "04:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, "3", JiraIssueTypeDto("Task"), "06:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(4L, "4", JiraIssueTypeDto("Task"), "03:00", "05:00"))
+        addWorklog(workDay, WorkLogDto(4L, WORK_LOG, "4", JiraIssueTypeDto("Task"), "03:00", "05:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -48,11 +49,11 @@ internal class WorkDayWorklogAddTest {
     fun `should adjust neighbour in the back if enought space in front`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, "1", JiraIssueTypeDto("Task"), "01:00", "02:00"))
-        addWorklog(workDay, WorkLogDto(2L, "2", JiraIssueTypeDto("Task"), "06:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"), "01:00", "02:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, "2", JiraIssueTypeDto("Task"), "06:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(3L, "3", JiraIssueTypeDto("Task"), "03:00", "07:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, "3", JiraIssueTypeDto("Task"), "03:00", "07:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -75,11 +76,11 @@ internal class WorkDayWorklogAddTest {
     fun `should adjust front neighbour if enougt space in back`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, "1", JiraIssueTypeDto("Task"), "02:00", "04:00"))
-        addWorklog(workDay, WorkLogDto(2L, "2", JiraIssueTypeDto("Task"), "07:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"), "02:00", "04:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, "2", JiraIssueTypeDto("Task"), "07:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(4L, "4", JiraIssueTypeDto("Task"), "03:00", "05:00"))
+        addWorklog(workDay, WorkLogDto(4L, WORK_LOG, "4", JiraIssueTypeDto("Task"), "03:00", "05:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -102,11 +103,11 @@ internal class WorkDayWorklogAddTest {
     fun `should add worklog wihout changeing naigbours if there is space`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, "1", JiraIssueTypeDto("Task"), "01:00", "02:00"))
-        addWorklog(workDay, WorkLogDto(2L, "2", JiraIssueTypeDto("Task"), "06:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"), "01:00", "02:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, "2", JiraIssueTypeDto("Task"), "06:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(3L, "3", JiraIssueTypeDto("Task"), "03:00", "04:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, "3", JiraIssueTypeDto("Task"), "03:00", "04:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -129,12 +130,12 @@ internal class WorkDayWorklogAddTest {
     fun `should add worklog when it its ovveriding other worklogs and consider them in conflict`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, "1", JiraIssueTypeDto("Task"), "02:00"))
-        addWorklog(workDay, WorkLogDto(2L, "2", JiraIssueTypeDto("Task"), "04:00"))
-        addWorklog(workDay, WorkLogDto(3L, "3", JiraIssueTypeDto("Task"), "06:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"), "02:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, "2", JiraIssueTypeDto("Task"), "04:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, "3", JiraIssueTypeDto("Task"), "06:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(4L, "4", JiraIssueTypeDto("Task"), "03:00", "07:00"))
+        addWorklog(workDay, WorkLogDto(4L, WORK_LOG, "4", JiraIssueTypeDto("Task"), "03:00", "07:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -165,12 +166,12 @@ internal class WorkDayWorklogAddTest {
     fun `should add worklog when it its ovveriding other worklogs and consider them in conflict edge start and stop`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, "1", JiraIssueTypeDto("Task"), "02:00"))
-        addWorklog(workDay, WorkLogDto(2L, "2", JiraIssueTypeDto("Task"), "04:00"))
-        addWorklog(workDay, WorkLogDto(3L, "3", JiraIssueTypeDto("Task"), "06:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"), "02:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, "2", JiraIssueTypeDto("Task"), "04:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, "3", JiraIssueTypeDto("Task"), "06:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(4L, "4", JiraIssueTypeDto("Task"), "04:00", "06:00"))
+        addWorklog(workDay, WorkLogDto(4L, WORK_LOG, "4", JiraIssueTypeDto("Task"), "04:00", "06:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }
@@ -198,15 +199,15 @@ internal class WorkDayWorklogAddTest {
     }
 
     @Test
-    fun `should add worklog when it its ovveriding other worklogs and consider them in conflict edge start and stop on conflictedworklog only`() {
+    fun `should add worklog when it its overiding other worklogs and consider them in conflict edge start and stop on conflictedworklog only`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, "1", JiraIssueTypeDto("Task"), "01:00", "02:00"))
-        addWorklog(workDay, WorkLogDto(2L, "2", JiraIssueTypeDto("Task"), "04:00", "05:00"))
-        addWorklog(workDay, WorkLogDto(3L, "3", JiraIssueTypeDto("Task"), "07:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"), "01:00", "02:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, "2", JiraIssueTypeDto("Task"), "04:00", "05:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, "3", JiraIssueTypeDto("Task"), "07:00"))
 
         //when
-        addWorklog(workDay, WorkLogDto(4L, "4", JiraIssueTypeDto("Task"), "03:00", "06:00"))
+        addWorklog(workDay, WorkLogDto(4L, WORK_LOG, "4", JiraIssueTypeDto("Task"), "03:00", "06:00"))
 
         //then
         val worklogsAfterChanges = workDay.workLogs.sortedBy { it.started }

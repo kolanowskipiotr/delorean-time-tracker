@@ -21,8 +21,15 @@
                                     <@issueLink issueStatistics.issueKey jiraUrl/>:
                                     <#list issueStatistics.distinctJiraIssuesByName() as jiraIssue>
                                         <#if jiraIssue.jiraName?has_content>
-                                            <@issueType jiraIssue.jiraIssueType/> ${jiraIssue.jiraName?html}
-                                            <#if jiraIssue_has_next>, </#if>
+                                            <#local jiraNameWithIcon>
+                                                <@issueType jiraIssue.jiraIssueType jiraIssue.workLogType/> ${jiraIssue.jiraName?html}
+                                                <#if jiraIssue_has_next>, </#if>
+                                            </#local>
+                                            <#if jiraIssue.workLogType == "WORK_LOG">
+                                                ${jiraNameWithIcon}
+                                            <#else>
+                                                <small>${jiraNameWithIcon}</small>
+                                            </#if>
                                         </#if>
                                     </#list>
                                 </footer>

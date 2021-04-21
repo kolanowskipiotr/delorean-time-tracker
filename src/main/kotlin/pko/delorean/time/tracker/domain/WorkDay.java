@@ -5,6 +5,7 @@ import pko.delorean.time.tracker.domain.summary.IssueSummary;
 import pko.delorean.time.tracker.kernel.Utils;
 import pko.delorean.time.tracker.ui.work.day.dto.JiraIssueTypeDto;
 import pko.delorean.time.tracker.ui.work.day.dto.WorkLogDto;
+import pko.delorean.time.tracker.ui.work.day.dto.WorkLogTypeDto;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -13,11 +14,14 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.groupingBy;
+import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static pko.delorean.time.tracker.domain.WorkDayStatus.*;
@@ -64,12 +68,18 @@ public class WorkDay implements Serializable {
         return workLogs;
     }
 
-    public Set<ExportableWorkLog> getUnexportedWorkLogs() {
-        return this.workLogs.stream()
-                .filter(WorkLog::isUnexported)
-                .filter(workLog -> Utils.Companion.workLogDuration(workLog, this.createDate) > 0)
-                .map(workLog -> new ExportableWorkLog(workLog, buildExportComment(workLog), createDate))
-                .collect(Collectors.toSet());
+    public Set<ExportableWorkLog> calculteUnexportedWorkLogs() {
+        addBreaksToWorLogs();
+
+        return getExportableWorkLogsStream()
+                .map(workLog -> new ExportableWorkLog(
+                        workLog,
+                        workLog.getBreak(),
+                        buildExportComment(
+                                workLog,
+                                workLog.getBreak()),
+                        createDate))
+                .collect(toSet());
     }
 
     public Long getDuration() {
@@ -82,7 +92,7 @@ public class WorkDay implements Serializable {
                 .entrySet().stream()
                 .map(it -> new ProjectStatistics(it.getKey(), it.getValue(), this.createDate))
                 .sorted(comparing(ProjectStatistics::getDuration))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     public List<IssueSummary> getSummary() {
@@ -91,7 +101,7 @@ public class WorkDay implements Serializable {
                 .entrySet().stream()
                 .map(it -> new IssueSummary(it.getKey(), it.getValue()))
                 .sorted(comparing(IssueSummary::getOrdering))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
     public WorkDayStatus getStatus() {
@@ -108,7 +118,7 @@ public class WorkDay implements Serializable {
         return this.workLogs.stream()
                 .map(it -> workLogInConflictIds(it.getStarted(), endedOrEndOfDay(it), it.getId()))
                 .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
+                .collect(toSet());
     }
 
     public void update(LocalDate date) {
@@ -142,10 +152,9 @@ public class WorkDay implements Serializable {
         endWorklogs(now);
     }
 
-    public void continueTracking(long workLogId) {
+    public void continueTracking() {
         this.workLogs.stream()
                 .max(comparing(WorkLog::getStarted))
-                .filter(workLog -> workLog.getId().equals(workLogId))
                 .ifPresent(WorkLog::contiune);
     }
 
@@ -153,43 +162,48 @@ public class WorkDay implements Serializable {
         Instant now = Utils.Companion.buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES));
         List<WorkLog> workLogsToCopy = this.workLogs.stream()
                 .filter(workLog -> workLog.getId().equals(workLogId))
-                .collect(Collectors.toList());
+                .collect(toList());
         workLogsToCopy.forEach(it -> addWorkLog(
                 new WorkLogDto(
                         null,
+                        toApplicationModel(it.getType()),
                         it.getJiraId(),
                         JiraIssueTypeDto.Companion.buildJava(it.getJiraIssueType().getValue()),
                         Utils.Companion.getTIME_FORMATTER().format(now),
                         null,
                         null,
+                        it.getBreak(),
                         it.getJiraName(),
                         it.getComment(),
                         null)));
     }
 
+    public void addBreak(WorkLogTypeDto breakType) {
+        addWorkLog(WorkLogDto.Companion.breakDto(
+                breakType,
+                requireNonNull(Utils.Companion.formatTime(now()))));
+    }
+
     public void addWorkLog(WorkLogDto workLogDto) {
-        Optional<Instant> startAt = modifyWorkloads(workLogDto);
+        Optional<Instant> startAt = modifyWorkLogs(workLogDto);
 
         startAt.map(it -> new WorkLog(
                 this,
+                toDomainModel(workLogDto.getType()),
                 it,
                 isBlank(workLogDto.getEnded())
                         ? null
                         : Utils.Companion.buildDateTimeInstant(this.createDate, workLogDto.getEnded()),
                 workLogDto.getJiraIssiueId(),
+                toDomainModel(workLogDto.getJiraIssueType()),
                 workLogDto.getJiraIssiueName(),
                 workLogDto.getJiraIssiueComment(),
-                Utils.Companion.buildDateTimeInstantEndOfDay(this.createDate),
-                toDomainModel(workLogDto.getJiraIssueType())))
+                Utils.Companion.buildDateTimeInstantEndOfDay(this.createDate)))
                 .ifPresent(workLogs::add);
     }
 
-    private JiraIssueType toDomainModel(JiraIssueTypeDto jiraIssueType) {
-        return new JiraIssueType(jiraIssueType.getName());
-    }
-
     public void editWorkLog(WorkLogDto workLogDto) {
-        Optional<Instant> startAt = modifyWorkloads(workLogDto);
+        Optional<Instant> startAt = modifyWorkLogs(workLogDto);
         Instant ended = isBlank(workLogDto.getEnded()) ? null : Utils.Companion.buildDateTimeInstant(this.createDate, workLogDto.getEnded());
         Instant endOfDay = Utils.Companion.buildDateTimeInstantEndOfDay(this.createDate);
 
@@ -217,7 +231,7 @@ public class WorkDay implements Serializable {
                 .forEach(it -> it.end(ended, endOfDay));
     }
 
-    private Optional<Instant> modifyWorkloads(WorkLogDto workLogDto) {
+    private Optional<Instant> modifyWorkLogs(WorkLogDto workLogDto) {
         Instant now = now().truncatedTo(MINUTES);
         Instant started = isBlank(workLogDto.getStarted())
                 ? Utils.Companion.buildDateTimeInstant(this.createDate, now)
@@ -268,20 +282,84 @@ public class WorkDay implements Serializable {
                 .filter(it -> !it.getId().equals(idToExclude))
                 .filter(it -> started.isBefore(endedOrEndOfDay(it)) & ended.isAfter(it.getStarted()))
                 .map(WorkLog::getId)
-                .collect(Collectors.toSet());
+                .collect(toSet());
     }
 
-    private String buildExportComment(WorkLog worklog) {
+    private void addBreaksToWorLogs() {
+        long breaksDuration = getExportableWorkLogsStream()
+                .filter(WorkLog::isDividable)
+                .peek(WorkLog::markExported)//☢️
+                .mapToLong(workLog -> Utils.Companion.workLogDuration(workLog, this.createDate))
+                .sum();
+
+        List<WorkLog> workLogsToExport = getExportableWorkLogsStream()
+                .filter(WorkLog::isUndividable)
+                .collect(toList());
+
+        Queue<Long> breaksForIssues = calculateBreaks(breaksDuration, workLogsToExport.size());
+        workLogsToExport.forEach(
+                workLog -> workLog.addBreak(breaksForIssues.poll()));
+    }
+
+    private Queue<Long> calculateBreaks(long breaksDuration, int numberOfWorkLogsToExport) {
+        long breakDuration = numberOfWorkLogsToExport == 0 ? 0 : breaksDuration / numberOfWorkLogsToExport;
+        long lastBreakDuration = numberOfWorkLogsToExport == 0 ? 0 : breaksDuration % numberOfWorkLogsToExport;
+        return IntStream.rangeClosed(1, numberOfWorkLogsToExport).boxed()
+                .map(workLogNumber -> breakDuration + (workLogNumber <= lastBreakDuration ? 1 : 0))
+                .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    private Stream<WorkLog> getExportableWorkLogsStream(){
+        return this.workLogs.stream()
+                .filter(WorkLog::isExportable)
+                .filter(WorkLog::isUnexported)
+                .filter(workLog -> Utils.Companion.workLogDuration(workLog, this.createDate) > 0);
+    }
+
+    private String buildExportComment(WorkLog worklog, long breakDuration) {
         return defaultString(worklog.getComment()) + " "
-                + Utils.Companion.getDATE_FORMATTER().format(createDate) + ", "
+                + Utils.Companion.getDATE_FORMATTER().format(createDate) + " "
                 + Utils.Companion.getTIME_FORMATTER().format(worklog.getStarted()) + "-" + Utils.Companion.getTIME_FORMATTER().format(worklog.getEnded()) + " "
-                + "(" + Utils.Companion.workLogDuration(worklog, this.createDate) + "m)";
+                + "(" + Utils.Companion.workLogDuration(worklog, this.createDate) + "m)"
+                + (breakDuration > 0 ? " + czas organizacyjny " + breakDuration + "m" : "");
+    }
+
+    private WorkLogType toDomainModel(WorkLogTypeDto type) {
+        switch (type) {
+            case WORK_LOG:
+                return WorkLogType.WORK_LOG;
+            case BREAK:
+                return WorkLogType.BREAK;
+            case WORK_ORGANIZATION:
+                return WorkLogType.WORK_ORGANIZATION;
+            case PRIVATE_WORK_LOG:
+                return WorkLogType.PRIVATE_WORK_LOG;
+        }
+        throw new IllegalStateException("Unknown work log type: " + type.name());
+    }
+
+    private WorkLogTypeDto toApplicationModel(WorkLogType type) {
+        switch (type) {
+            case WORK_LOG:
+                return WorkLogTypeDto.WORK_LOG;
+            case BREAK:
+                return WorkLogTypeDto.BREAK;
+            case WORK_ORGANIZATION:
+                return WorkLogTypeDto.WORK_ORGANIZATION;
+            case PRIVATE_WORK_LOG:
+                return WorkLogTypeDto.PRIVATE_WORK_LOG;
+        }
+        throw new IllegalStateException("Unknown work log type: " + type.name());
+    }
+
+    private JiraIssueType toDomainModel(JiraIssueTypeDto jiraIssueType) {
+        return new JiraIssueType(jiraIssueType.getName());
     }
 
     @Override
     public int hashCode() {
         return 31;
-    }
+    }//FIXME: This is wrong
 
     @Override
     public boolean equals(Object o) {

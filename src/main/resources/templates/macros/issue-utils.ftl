@@ -4,26 +4,40 @@
     <a href="<#if jiraUrl?has_content>${jiraUrl?html}/browse/${jiraIssiueId?html}</#if>" target="_blank">${jiraIssiueId?html}</a>
 </#macro>
 
-<#macro issueType type>
-    <#if type.iconUri??>
-        <img src="${type.iconUri!}" class="mb-1" title="${type.name?html} <#if type.subtask>(subtask) </#if>- ${type.description!?trim?html}" />
+<#macro issueType jiraType  workLogType = "WORK_LOG">
+    <#local workLogTypeDisplayName = workLogType!?html?replace("_", " ")?capitalize/>
+    <#if workLogType == "WORK_LOG">
+        <#if jiraType.iconUri??>
+            <img src="${jiraType.iconUri!}" class="mb-1" title="${jiraType.name?html} <#if jiraType.subtask>(subtask) </#if>- ${jiraType.description!?trim?html}" />
+        <#else>
+            <@emojiWithAlt "👷" jiraType.name/>
+        </#if>
+    <#elseif workLogType = "BREAK">
+        <@emojiWithAlt "🏖" workLogTypeDisplayName/>
+    <#elseif workLogType = "WORK_ORGANIZATION">
+        <@emojiWithAlt "🗄" workLogTypeDisplayName/>
+    <#elseif workLogType = "PRIVATE_WORK_LOG">
+        <@emojiWithAlt "🏡" workLogTypeDisplayName/>
     <#else>
-        <@randomEmoji random type.name/>
+        <@randomEmoji random workLogType.name/>
     </#if>
 </#macro>
 
-<#macro stateIcon state>
+<#macro stateIcon state, class = "", text = "">
     <#switch state>
         <#case "IN_PROGRESS">
-            <@emojiWithAlt "➡️" state/>
+            <@emojiWithAlt "➡️" state class text/>
             <#break>
         <#case "STOPPED">
-            <@emojiWithAlt "⏹" state/>
+            <@emojiWithAlt "⏹" state class text/>
             <#break>
         <#case "EXPORTED">
-            <@emojiWithAlt "✅" state/>
+            <@emojiWithAlt "✅" state class text/>
+            <#break>
+        <#case "UNEXPORTABLE">
+            <@emojiWithAlt "⛔" state class text/>
             <#break>
         <#default>
-            <@randomEmoji random state/>
+            <@randomEmoji random state class text/>
     </#switch>
 </#macro>
