@@ -105,10 +105,13 @@ public class WorkDay implements Serializable {
     }
 
     public WorkDayStatus getStatus() {
-        if (this.workLogs.stream().allMatch(wl -> wl.getStatus() == STOPPED)) {
+        Stream<WorkLog> workLogsStream = this.workLogs.stream()
+                .filter(wl -> wl.getType() != WorkLogType.PRIVATE_WORK_LOG);
+
+        if (workLogsStream.allMatch(wl -> wl.getStatus() == STOPPED)) {
             return STOPPED;
         }
-        if (this.workLogs.stream().allMatch(wl -> wl.getStatus() == EXPORTED)) {
+        if (workLogsStream.allMatch(wl -> wl.getStatus() == EXPORTED)) {
             return EXPORTED;
         }
         return IN_PROGRESS;
