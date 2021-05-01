@@ -166,6 +166,6 @@ private fun WorkLogTypeForm?.toDto() =
         WorkLogTypeForm.WORK_LOG -> WorkLogTypeDto.WORK_LOG
         WorkLogTypeForm.BREAK -> WorkLogTypeDto.BREAK
         WorkLogTypeForm.WORK_ORGANIZATION -> WorkLogTypeDto.WORK_ORGANIZATION
-        WorkLogTypeForm.PRIVATE_WORK_LOG -> WorkLogTypeDto.PRIVATE_WORK_LOG
+        WorkLogTypeForm.PRIVATE_TIME -> WorkLogTypeDto.PRIVATE_TIME
         null -> WorkLogTypeDto.WORK_LOG
     }

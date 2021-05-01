@@ -82,4 +82,11 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="rename PRIVATE_WORK_LOG to PRIVATE_TIME" author="pko">
+        <update tableName="work_logs">
+            <column name="type" value="PRIVATE_TIME"/>
+            <where>type='PRIVATE_WORK_LOG'</where>
+        </update>
+    </changeSet>
+
 </databaseChangeLog>

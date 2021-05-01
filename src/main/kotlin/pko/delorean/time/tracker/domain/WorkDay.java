@@ -98,9 +98,9 @@ public class WorkDay implements Serializable {
                 .collect(toList());
 
         IssueStatistics privateTimeStatistics = new IssueStatistics(
-                WorkLogType.PRIVATE_WORK_LOG.name(),
+                WorkLogType.PRIVATE_TIME.name(),
                 workLogs.stream()
-                        .filter(wl -> wl.getType() == WorkLogType.PRIVATE_WORK_LOG)
+                        .filter(wl -> wl.getType() == WorkLogType.PRIVATE_TIME)
                         .collect(toList()),
                 this.createDate);
         return new WorkDayStatistics(
@@ -241,7 +241,7 @@ public class WorkDay implements Serializable {
 
     private Stream<WorkLog> workLogsWithoutPrivateTimeStream() {
         return this.workLogs.stream()
-                .filter(wl -> wl.getType() != WorkLogType.PRIVATE_WORK_LOG);
+                .filter(wl -> wl.getType() != WorkLogType.PRIVATE_TIME);
     }
 
     private void endWorklogs(Instant ended) {
@@ -352,8 +352,8 @@ public class WorkDay implements Serializable {
                 return WorkLogType.BREAK;
             case WORK_ORGANIZATION:
                 return WorkLogType.WORK_ORGANIZATION;
-            case PRIVATE_WORK_LOG:
-                return WorkLogType.PRIVATE_WORK_LOG;
+            case PRIVATE_TIME:
+                return WorkLogType.PRIVATE_TIME;
         }
         throw new IllegalStateException("Unknown work log type: " + type.name());
     }
@@ -366,8 +366,8 @@ public class WorkDay implements Serializable {
                 return WorkLogTypeDto.BREAK;
             case WORK_ORGANIZATION:
                 return WorkLogTypeDto.WORK_ORGANIZATION;
-            case PRIVATE_WORK_LOG:
-                return WorkLogTypeDto.PRIVATE_WORK_LOG;
+            case PRIVATE_TIME:
+                return WorkLogTypeDto.PRIVATE_TIME;
         }
         throw new IllegalStateException("Unknown work log type: " + type.name());
     }

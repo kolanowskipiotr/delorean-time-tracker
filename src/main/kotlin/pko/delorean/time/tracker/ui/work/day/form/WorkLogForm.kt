@@ -16,5 +16,5 @@ enum class WorkLogTypeForm {
     WORK_LOG,//👷
     BREAK,//🏖
     WORK_ORGANIZATION,//🗄
-    PRIVATE_WORK_LOG//🏡
+    PRIVATE_TIME//🏡
 }

@@ -47,7 +47,7 @@
                         </#if>
                         <a class="ml-2 btn btn-success"     href="/work-day/break?workDayId=${workDay.id?c}&breakType=BREAK"                role="button">🏖 Start break</a>
                         <a class="ml-2 btn btn-secondary"   href="/work-day/break?workDayId=${workDay.id?c}&breakType=WORK_ORGANIZATION"    role="button">🗄 Start work organization</a>
-                        <a class="ml-2 btn btn-info"        href="/work-day/break?workDayId=${workDay.id?c}&breakType=PRIVATE_WORK_LOG"     role="button">🏡 Start private time</a>
+                        <a class="ml-2 btn btn-info"        href="/work-day/break?workDayId=${workDay.id?c}&breakType=PRIVATE_TIME"     role="button">🏡 Start private time</a>
                     </div>
                 </div>
             </form>
@@ -190,7 +190,7 @@
                                                 list-group-item-success
                                             <#elseif jiraIssue.workLogType == "WORK_ORGANIZATION">
                                                 list-group-item-secondary
-                                            <#elseif jiraIssue.workLogType == "PRIVATE_WORK_LOG">
+                                            <#elseif jiraIssue.workLogType == "PRIVATE_TIME">
                                                 list-group-item-info
                                             </#if>
                                             py-1">

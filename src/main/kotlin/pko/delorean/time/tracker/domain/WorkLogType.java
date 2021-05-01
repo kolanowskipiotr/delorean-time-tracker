@@ -4,7 +4,7 @@ public enum WorkLogType {
     WORK_LOG(Constants.UNDIVIDABLE, Constants.EXPORTABLE),//👷
     BREAK(Constants.DIVIDABLE, Constants.EXPORTABLE),//🏖️
     WORK_ORGANIZATION(Constants.DIVIDABLE, Constants.EXPORTABLE),//🗄️
-    PRIVATE_WORK_LOG(Constants.UNDIVIDABLE, Constants.UNEXPORTABLE);//🏡
+    PRIVATE_TIME(Constants.UNDIVIDABLE, Constants.UNEXPORTABLE);//🏡
 
     private boolean dividable;
     private boolean exportable;

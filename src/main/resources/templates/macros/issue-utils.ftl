@@ -16,7 +16,7 @@
         <@emojiWithAlt "🏖" workLogTypeDisplayName/>
     <#elseif workLogType = "WORK_ORGANIZATION">
         <@emojiWithAlt "🗄" workLogTypeDisplayName/>
-    <#elseif workLogType = "PRIVATE_WORK_LOG">
+    <#elseif workLogType = "PRIVATE_TIME">
         <@emojiWithAlt "🏡" workLogTypeDisplayName/>
     <#else>
         <@randomEmoji random workLogType.name/>

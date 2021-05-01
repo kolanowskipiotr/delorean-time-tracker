@@ -242,7 +242,7 @@ class WorkDayService @Autowired constructor(
             WorkLogType.WORK_LOG -> WorkLogTypeDto.WORK_LOG
             WorkLogType.BREAK -> WorkLogTypeDto.BREAK
             WorkLogType.WORK_ORGANIZATION -> WorkLogTypeDto.WORK_ORGANIZATION
-            WorkLogType.PRIVATE_WORK_LOG -> WorkLogTypeDto.PRIVATE_WORK_LOG
+            WorkLogType.PRIVATE_TIME -> WorkLogTypeDto.PRIVATE_TIME
         }
 
     private fun WorkDayStatistics.toDto(): WorkDayStatisticsDto =

@@ -34,7 +34,7 @@ enum class WorkLogTypeDto {
     WORK_LOG,//👷
     BREAK,//🏖
     WORK_ORGANIZATION,//🗄
-    PRIVATE_WORK_LOG//🏡
+    PRIVATE_TIME//🏡
 }
 
 data class JiraIssueTypeDto @JvmOverloads constructor(

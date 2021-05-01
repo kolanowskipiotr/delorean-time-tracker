@@ -222,7 +222,7 @@ internal class WorkDayBreakCalculationTest {
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
         addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"),"02:00"))
         addWorklog(workDay, WorkLogDto(2L, WORK_ORGANIZATION, "2", JiraIssueTypeDto("Task"),"03:00"))
-        addWorklog(workDay, WorkLogDto(3L, PRIVATE_WORK_LOG, "3", JiraIssueTypeDto("Task"),"04:00"))
+        addWorklog(workDay, WorkLogDto(3L, PRIVATE_TIME, "3", JiraIssueTypeDto("Task"),"04:00"))
         addWorklog(workDay, WorkLogDto(4L, BREAK, "4", JiraIssueTypeDto("Break"), "05:00"))
         addWorklog(workDay, WorkLogDto(5L, WORK_LOG, "5", JiraIssueTypeDto("Task"), "06:00"))
         workDay.stopTracking()
