@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional
 import pko.delorean.time.tracker.domain.*
 import pko.delorean.time.tracker.domain.dto.ExportableWorkLog
 import pko.delorean.time.tracker.domain.statistics.IssueStatistics
+import pko.delorean.time.tracker.domain.statistics.ProjectStatistics
+import pko.delorean.time.tracker.domain.statistics.WorkDayStatistics
 import pko.delorean.time.tracker.domain.summary.IssueSummary
 import pko.delorean.time.tracker.infrastructure.JiraService
 import pko.delorean.time.tracker.infrastructure.JiraService.ConnectionResult
@@ -159,11 +161,26 @@ class WorkDayService @Autowired constructor(
     }
 
     fun calculateStatistics(workDays: List<WorkDayDto>): WorkDaysPeriodStatisticsDto {
-        val statistics = workDays.flatMap { it.projectsStatistics.orEmpty() }
+        val projectsStatistics = workDays.flatMap { it.statistics?.projectsStatistics .orEmpty() }
             .groupBy { it.projectKey }
             .map { ProjectStatisticsDto.fromMultipleStatistics(it.key, it.value) }
             .sortedByDescending { it.duration }
-        return WorkDaysPeriodStatisticsDto(statistics, statistics.map { it.duration }.sum())
+
+        val privateTime = workDays.map { it.statistics }
+            .mapNotNull { it?.privateTime }
+            .let {privateTimeData -> when {
+                    privateTimeData.isNotEmpty() -> IssueStatisticsDto(
+                        privateTimeData.first().issueKey,
+                        privateTimeData.sumByLong{ it.duration },
+                        privateTimeData.flatMap { it.jiraIssues })
+                    else -> null
+                }
+            }
+
+        return WorkDaysPeriodStatisticsDto(
+            projectsStatistics.map { it.duration }.sum(),
+            projectsStatistics,
+            privateTime)
     }
 
     private fun WorkDay.toDto() =
@@ -172,7 +189,7 @@ class WorkDayService @Autowired constructor(
             createDate,
             status.name,
             duration,
-            statistics.map { it.toDto() }.sortedByDescending { it.duration },
+            statistics.toDto(),
             summary.map { it.toDto() },
             workLogs
                 .sortedBy { it.started }
@@ -227,5 +244,20 @@ class WorkDayService @Autowired constructor(
             WorkLogType.WORK_ORGANIZATION -> WorkLogTypeDto.WORK_ORGANIZATION
             WorkLogType.PRIVATE_WORK_LOG -> WorkLogTypeDto.PRIVATE_WORK_LOG
         }
+
+    private fun WorkDayStatistics.toDto(): WorkDayStatisticsDto =
+        WorkDayStatisticsDto(
+            this.workDayDuration,
+            this.projectsStatistics.map { it.toDto() }.sortedByDescending { it.duration },
+            this.privateTime.toDto()
+        )
+
+    private inline fun <T> Iterable<T>.sumByLong(selector: (T) -> Long): Long {
+        var sum = 0L
+        for (element in this) {
+            sum += selector(element)
+        }
+        return sum
+    }
 }
 

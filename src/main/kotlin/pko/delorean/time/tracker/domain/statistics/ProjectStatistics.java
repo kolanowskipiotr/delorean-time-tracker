@@ -1,5 +1,6 @@
-package pko.delorean.time.tracker.domain;
+package pko.delorean.time.tracker.domain.statistics;
 
+import pko.delorean.time.tracker.domain.WorkLog;
 import pko.delorean.time.tracker.domain.statistics.IssueStatistics;
 import pko.delorean.time.tracker.kernel.Utils;
 

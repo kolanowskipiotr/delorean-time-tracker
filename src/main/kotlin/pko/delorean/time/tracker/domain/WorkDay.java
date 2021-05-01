@@ -1,6 +1,9 @@
 package pko.delorean.time.tracker.domain;
 
 import pko.delorean.time.tracker.domain.dto.ExportableWorkLog;
+import pko.delorean.time.tracker.domain.statistics.IssueStatistics;
+import pko.delorean.time.tracker.domain.statistics.ProjectStatistics;
+import pko.delorean.time.tracker.domain.statistics.WorkDayStatistics;
 import pko.delorean.time.tracker.domain.summary.IssueSummary;
 import pko.delorean.time.tracker.kernel.Utils;
 import pko.delorean.time.tracker.ui.work.day.dto.JiraIssueTypeDto;
@@ -86,13 +89,24 @@ public class WorkDay implements Serializable {
         return Utils.Companion.sumDurations(this.workLogs, this.createDate);
     }
 
-    public List<ProjectStatistics>  getStatistics() {
-        return this.workLogs.stream()
+    public WorkDayStatistics getStatistics() {
+        List<ProjectStatistics> projectsStatistics = workLogsWithoutPrivateTimeStream()
                 .collect(groupingBy(WorkLog::getProjectKey))
                 .entrySet().stream()
                 .map(it -> new ProjectStatistics(it.getKey(), it.getValue(), this.createDate))
                 .sorted(comparing(ProjectStatistics::getDuration))
                 .collect(toList());
+
+        IssueStatistics privateTimeStatistics = new IssueStatistics(
+                WorkLogType.PRIVATE_WORK_LOG.name(),
+                workLogs.stream()
+                        .filter(wl -> wl.getType() == WorkLogType.PRIVATE_WORK_LOG)
+                        .collect(toList()),
+                this.createDate);
+        return new WorkDayStatistics(
+                projectsStatistics.stream().mapToLong(ProjectStatistics::getDuration).sum(),
+                projectsStatistics,
+                privateTimeStatistics);
     }
 
     public List<IssueSummary> getSummary() {
@@ -105,13 +119,11 @@ public class WorkDay implements Serializable {
     }
 
     public WorkDayStatus getStatus() {
-        Stream<WorkLog> workLogsStream = this.workLogs.stream()
-                .filter(wl -> wl.getType() != WorkLogType.PRIVATE_WORK_LOG);
 
-        if (workLogsStream.allMatch(wl -> wl.getStatus() == STOPPED)) {
+        if (workLogsWithoutPrivateTimeStream().allMatch(wl -> wl.getStatus() == STOPPED)) {
             return STOPPED;
         }
-        if (workLogsStream.allMatch(wl -> wl.getStatus() == EXPORTED)) {
+        if (workLogsWithoutPrivateTimeStream().allMatch(wl -> wl.getStatus() == EXPORTED)) {
             return EXPORTED;
         }
         return IN_PROGRESS;
@@ -225,6 +237,11 @@ public class WorkDay implements Serializable {
 
     public void removeWorkLog(long workLogId) {
         this.workLogs.removeIf(it -> it.getId() == workLogId);
+    }
+
+    private Stream<WorkLog> workLogsWithoutPrivateTimeStream() {
+        return this.workLogs.stream()
+                .filter(wl -> wl.getType() != WorkLogType.PRIVATE_WORK_LOG);
     }
 
     private void endWorklogs(Instant ended) {

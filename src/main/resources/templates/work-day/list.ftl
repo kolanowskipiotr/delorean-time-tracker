@@ -5,6 +5,7 @@
 <#include "/macros/issue-utils.ftl">
 <#include "/macros/project-utils.ftl">
 <#include "/macros/duration-utils.ftl">
+<#include "/macros/enum-utils.ftl">
 
 <@header "Work days"/>
 
@@ -72,9 +73,13 @@
                         <td>${workDay.date?html}</td>
                         <td class="text-center"><#if workDay.duration??>${workDay.duration}m<br>(${(workDay.duration/60)?floor}h ${workDay.duration - ((workDay.duration/60)?floor * 60)}m)</#if> </td>
                         <td>
-                            <#if workDay.projectsStatistics??>
+                            <#if workDay.statistics??>
                                 <ul style="list-style-type:none;">
-                                    <#list workDay.projectsStatistics as projectStatistics>
+                                    <li>
+                                        <#assign privateTimeDuration=workDay.statistics.privateTime.duration/>
+                                        <@prityName workDay.statistics.privateTime.issueKey/> - <#if privateTimeDuration?? && workDay.duration gt 0> ${privateTimeDuration/workDay.duration*100}% - ${privateTimeDuration}m (${(privateTimeDuration/60)?floor}h ${privateTimeDuration - ((privateTimeDuration/60)?floor * 60)}m)<#else>0% - 0m (0h 0m)</#if>
+                                    </li>
+                                    <#list workDay.statistics.projectsStatistics as projectStatistics>
                                         <li>
                                             <#assign projectDuration=projectStatistics.duration/>
                                             ${projectStatistics.projectKey} - <#if projectDuration?? && workDay.duration gt 0> ${projectDuration/workDay.duration*100}% - ${projectDuration}m (${(projectDuration/60)?floor}h ${projectDuration - ((projectDuration/60)?floor * 60)}m)<#else>0% - 0m (0h 0m)</#if>
@@ -110,12 +115,12 @@
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1">Period ${filters.createDateStart} - ${filters.createDateEnd} </h5>
                         <small>
-                            <@duraton periodStatistics.duration periodStatistics.duration/>
+                            <@duraton periodStatistics.fullDuration periodStatistics.fullDuration/>
                         </small>
                     </div>
                 </div>
-                <#if periodStatistics.statistics??>
-                    <@projectsStatistics periodStatistics.statistics periodStatistics.duration/>
+                <#if periodStatistics.projectsStatistics??>
+                    <@projectsStatistics periodStatistics periodStatistics.fullDuration/>
                 </#if>
             </ul>
         </div>

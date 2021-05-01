@@ -34,7 +34,7 @@ class WorkDayListController (
         model.addAttribute("workDays", workDays)
         model.addAttribute("filters", filters.toDto())
         model.addAttribute("periodStatistics", workDayService.calculateStatistics(workDays))
-            return URL
+        return URL
     }
 
     @PostMapping("/add")

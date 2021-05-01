@@ -4,6 +4,7 @@
 <#include "/macros/issue-utils.ftl">
 <#include "/macros/project-utils.ftl">
 <#include "/macros/duration-utils.ftl">
+<#include "/macros/enum-utils.ftl">
 
 <@header "Work day: ${workDay.date}"/>
 
@@ -41,7 +42,8 @@
                         <#elseif workDay.state == "STOPPED">
                             <a class="ml-2 btn btn-primary" href="/work-day/work-log/continue?workDayId=${workDay.id?c}" role="button">➡ Continue</a>
                         <#else>
-                            <@stateIcon workDay.state!?html "ml-2 btn btn-info" workDay.state!?html?replace("_", " ")?capitalize/>
+                            <#assign prityState><@prityName workDay.state/></#assign>
+                            <@stateIcon workDay.state!?html "ml-2 btn btn-info" prityState/>
                         </#if>
                         <a class="ml-2 btn btn-success"     href="/work-day/break?workDayId=${workDay.id?c}&breakType=BREAK"                role="button">🏖 Start break</a>
                         <a class="ml-2 btn btn-secondary"   href="/work-day/break?workDayId=${workDay.id?c}&breakType=WORK_ORGANIZATION"    role="button">🗄 Start work organization</a>
@@ -158,13 +160,13 @@
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1 font-weight-bold">Whole day</h5>
                         <small>
-                            <@duraton workDay.duration workDay.duration/>
+                            <@duraton workDay.statistics.fullDuration workDay.statistics.fullDuration/>
                         </small>
                     </div>
                     <p class="mb-1">${workDay.date}</p>
                 </div>
-                <#if workDay.projectsStatistics??>
-                    <@projectsStatistics workDay.projectsStatistics workDay.duration/>
+                <#if workDay.statistics??>
+                    <@projectsStatistics workDay.statistics, workDay.statistics.fullDuration/>
                 </#if>
             </ul>
         </div>
