@@ -156,6 +156,18 @@ public class WorkDay implements Serializable {
                 });
     }
 
+    public void toggleExtensibility(long workLogId) {
+        this.workLogs.stream()
+                .filter(workLog -> workLog.getId().equals(workLogId))
+                .forEach(workLog -> {
+                    if (workLog.isExtensible()) {
+                        workLog.markUnextensible();
+                    } else {
+                        workLog.markExtensible();
+                    }
+                });
+    }
+
     public void markExported(List<Long> exportedIds) {
         this.workLogs.stream()
                 .filter(workLog -> exportedIds.contains(workLog.getId()))
@@ -182,6 +194,7 @@ public class WorkDay implements Serializable {
                 new WorkLogDto(
                         null,
                         toApplicationModel(it.getType()),
+                        it.isExtensible(),
                         it.getJiraId(),
                         JiraIssueTypeDto.Companion.buildJava(it.getJiraIssueType().getValue()),
                         Utils.Companion.getTIME_FORMATTER().format(now),
@@ -205,6 +218,7 @@ public class WorkDay implements Serializable {
         startAt.map(it -> new WorkLog(
                 this,
                 toDomainModel(workLogDto.getType()),
+                workLogDto.getExtensible(),
                 it,
                 isBlank(workLogDto.getEnded())
                         ? null
@@ -312,12 +326,13 @@ public class WorkDay implements Serializable {
                 .mapToLong(workLog -> Utils.Companion.workLogDuration(workLog, this.createDate))
                 .sum();
 
-        List<WorkLog> workLogsToExport = getExportableWorkLogsStream()
+        List<WorkLog> workLogsToAddBreaks = getExportableWorkLogsStream()
                 .filter(WorkLog::isUndividable)
+                .filter(WorkLog::isExtensible)
                 .collect(toList());
 
-        Queue<Long> breaksForIssues = calculateBreaks(breaksDuration, workLogsToExport.size());
-        workLogsToExport.forEach(
+        Queue<Long> breaksForIssues = calculateBreaks(breaksDuration, workLogsToAddBreaks.size());
+        workLogsToAddBreaks.forEach(
                 workLog -> workLog.addBreak(breaksForIssues.poll()));
     }
 

@@ -45,11 +45,11 @@
                     <tr>
                         <td>${jiraIssue_index +1}</td>
                         <td><a href="<#if jiraUrl??>${jiraUrl?html}/browse/${jiraIssue.jiraId?html}</#if>" target="_blank">${jiraIssue.jiraId?html}</a></td>
-                        <td><@issueType jiraIssue.type/> ${jiraIssue.jiraName?html}</td>
+                        <td><@issueType jiraType=jiraIssue.type extensible=jiraIssue.extensible/> ${jiraIssue.jiraName?html}</td>
                         <td>
                             <div class="btn-toolbar" role="toolbar">
                                 <div class="btn-group mr-2" role="group">
-                                    <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDayId?c}&searchedJiraIssueId=${jiraIssue.jiraId?url}&searchedJiraIssueType=${jiraIssue.type.name?url}&searchedJiraIssueName=${jiraIssue.jiraName?url}&searchedJiraIssueComment=${jiraIssue.comment!?url}" role="button">✔️ Choose</a>
+                                    <a class="btn btn-primary" href="/work-day/edit?workDayId=${workDayId?c}&searchedJiraIssueId=${jiraIssue.jiraId?url}&searchedJiraIssueType=${jiraIssue.type.name?url}&searchedJiraIssueName=${jiraIssue.jiraName?url}&searchedJiraIssueComment=${jiraIssue.comment!?url}&searchedWorkLogExtensible=${(jiraIssue.extensible!true)?c}" role="button">✔️ Choose</a>
                                 </div>
                             </div>
                         </td>

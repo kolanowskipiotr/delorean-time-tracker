@@ -160,6 +160,13 @@ class WorkDayService @Autowired constructor(
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
+    @Transactional
+    fun toggleExtensibility(workDayId: Long, workLogId: Long) {
+        val workDay = workDayJpaRepository.getOne(workDayId)
+        workDay.toggleExtensibility(workLogId)
+        workDayJpaRepository.saveAndFlush(workDay)
+    }
+
     fun calculateStatistics(workDays: List<WorkDayDto>): WorkDaysPeriodStatisticsDto {
         val projectsStatistics = workDays.flatMap { it.statistics?.projectsStatistics .orEmpty() }
             .groupBy { it.projectKey }
@@ -200,6 +207,7 @@ class WorkDayService @Autowired constructor(
         WorkLogDto(
             id,
             type.toDto(),
+            isExtensible,
             jiraId,
             jiraIssueType.toDto(),
             formatTime(started),
@@ -211,7 +219,7 @@ class WorkDayService @Autowired constructor(
             status.name
         )
     private fun WorkLog.toDto() =
-        JiraIssueDto(jiraId, jiraName, jiraIssueType.toJiraDto(), comment)
+        JiraIssueDto(jiraId, jiraName, jiraIssueType.toJiraDto(), isExtensible, comment)
 
     private fun IssueSummary.toDto() =
         IssueSummaryDto(jiraId, jiraIssues.map { it.toDto() })

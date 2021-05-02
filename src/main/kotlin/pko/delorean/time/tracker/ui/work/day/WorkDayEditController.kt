@@ -46,6 +46,7 @@ class WorkDayEditController(
         @RequestParam(name = "searchedWorkLogStart", required = false) searchedWorkLogStart: String?,
         @RequestParam(name = "searchedWorkLogEnd", required = false) searchedWorkLogEnd: String?,
         @RequestParam(name = "searchedWorkLogStatus", required = false) searchedWorkLogStatus: String?,
+        @RequestParam(name = "searchedWorkLogExtensible", required = false) searchedWorkLogExtensible: Boolean?,
         @RequestParam(name = "success", required = false) success: Boolean?,
         @RequestParam(name = "message", required = false) message: String?,
         model: Model
@@ -63,6 +64,7 @@ class WorkDayEditController(
         model.addAttribute("searchedWorkLogStart", searchedWorkLogStart)
         model.addAttribute("searchedWorkLogEnd", searchedWorkLogEnd)
         model.addAttribute("searchedWorkLogStatus", searchedWorkLogStatus)
+        model.addAttribute("searchedWorkLogExtensible", searchedWorkLogExtensible)
 
         model.addAttribute("workLogIdsInConflict", workDayService.workLogInConflictIds(workDayId))
 
@@ -157,8 +159,17 @@ class WorkDayEditController(
         return "redirect:${editUrl(workDayId)}"
     }
 
+    @GetMapping("/work-log/extensible/toggle")//FIXME: This should be Patch
+    fun toggleWorkLogextExtensibility(
+        @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
+        @RequestParam(name = "workLogId") workLogId: Long
+    ): String {
+        workDayService.toggleExtensibility(workDayId, workLogId)
+        return "redirect:${editUrl(workDayId)}"
+    }
+
     private fun WorkLogForm.toDto() =
-        WorkLogDto(workLogId, type.toDto(), jiraIssueId!!, JiraIssueTypeDto(jiraIssueType!!), started, ended, jiraIssiueName = jiraIssueName, jiraIssiueComment = jiraIssueComment )
+        WorkLogDto(workLogId, type.toDto(), extensible?:true, jiraIssueId!!, JiraIssueTypeDto(jiraIssueType!!), started, ended, jiraIssiueName = jiraIssueName, jiraIssiueComment = jiraIssueComment )
 }
 
 private fun WorkLogTypeForm?.toDto() =

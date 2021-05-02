@@ -17,9 +17,9 @@ internal class WorkDayBreakCalculationTest {
     fun `should divise break on work logs evenly`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(2L, BREAK, "2", JiraIssueTypeDto("Break"), "04:00"))
-        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, "3", JiraIssueTypeDto("Task"), "06:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00"))
+        addWorklog(workDay, WorkLogDto(2L, BREAK, true, "2", JiraIssueTypeDto("Break"), "04:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, true, "3", JiraIssueTypeDto("Task"), "06:00"))
         workDay.stopTracking()
 
         //when
@@ -51,10 +51,10 @@ internal class WorkDayBreakCalculationTest {
     fun `should divise break on work logs evenly as possible`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, "2", JiraIssueTypeDto("Task"),"03:00"))
-        addWorklog(workDay, WorkLogDto(3L, BREAK, "3", JiraIssueTypeDto("Break"), "04:00"))
-        addWorklog(workDay, WorkLogDto(4L, WORK_LOG, "4", JiraIssueTypeDto("Task"), "04:32"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, true, "2", JiraIssueTypeDto("Task"),"03:00"))
+        addWorklog(workDay, WorkLogDto(3L, BREAK, true, "3", JiraIssueTypeDto("Break"), "04:00"))
+        addWorklog(workDay, WorkLogDto(4L, WORK_LOG, true, "4", JiraIssueTypeDto("Task"), "04:32"))
         workDay.stopTracking()
 
         //when
@@ -92,10 +92,10 @@ internal class WorkDayBreakCalculationTest {
     fun `should add breaks only to some worklogs when break is to short`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "2", JiraIssueTypeDto("Task"),"03:00"))
-        addWorklog(workDay, WorkLogDto(2L, BREAK, "3", JiraIssueTypeDto("Break"), "04:00"))
-        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, "4", JiraIssueTypeDto("Task"), "04:02"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "2", JiraIssueTypeDto("Task"),"03:00"))
+        addWorklog(workDay, WorkLogDto(2L, BREAK, true, "3", JiraIssueTypeDto("Break"), "04:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, true, "4", JiraIssueTypeDto("Task"), "04:02"))
         workDay.stopTracking()
 
         //when
@@ -133,8 +133,8 @@ internal class WorkDayBreakCalculationTest {
     fun `should not add break when there is no worklogs`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, "3", JiraIssueTypeDto("Task"), "06:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, true, "3", JiraIssueTypeDto("Task"), "06:00"))
         workDay.stopTracking()
 
         //when
@@ -162,8 +162,8 @@ internal class WorkDayBreakCalculationTest {
     fun `should not add break when there is no woklogs`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, BREAK, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(3L, WORK_ORGANIZATION, "3", JiraIssueTypeDto("Task"), "06:00"))
+        addWorklog(workDay, WorkLogDto(1L, BREAK, true, "1", JiraIssueTypeDto("Task"),"02:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_ORGANIZATION, true, "3", JiraIssueTypeDto("Task"), "06:00"))
         workDay.stopTracking()
 
         //when
@@ -185,10 +185,10 @@ internal class WorkDayBreakCalculationTest {
     fun `should not add all break to one worklog`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, BREAK, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, "2", JiraIssueTypeDto("Task"),"04:00"))
-        addWorklog(workDay, WorkLogDto(3L, BREAK, "3", JiraIssueTypeDto("Task"),"06:00"))
-        addWorklog(workDay, WorkLogDto(4L, WORK_ORGANIZATION, "4", JiraIssueTypeDto("Task"), "08:00", "10:00"))
+        addWorklog(workDay, WorkLogDto(1L, BREAK, true, "1", JiraIssueTypeDto("Task"),"02:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, true, "2", JiraIssueTypeDto("Task"),"04:00"))
+        addWorklog(workDay, WorkLogDto(3L, BREAK, true, "3", JiraIssueTypeDto("Task"),"06:00"))
+        addWorklog(workDay, WorkLogDto(4L, WORK_ORGANIZATION, true, "4", JiraIssueTypeDto("Task"), "08:00", "10:00"))
         workDay.stopTracking()
 
         //when
@@ -220,11 +220,11 @@ internal class WorkDayBreakCalculationTest {
     fun `should skip private work logs`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(2L, WORK_ORGANIZATION, "2", JiraIssueTypeDto("Task"),"03:00"))
-        addWorklog(workDay, WorkLogDto(3L, PRIVATE_TIME, "3", JiraIssueTypeDto("Task"),"04:00"))
-        addWorklog(workDay, WorkLogDto(4L, BREAK, "4", JiraIssueTypeDto("Break"), "05:00"))
-        addWorklog(workDay, WorkLogDto(5L, WORK_LOG, "5", JiraIssueTypeDto("Task"), "06:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_ORGANIZATION, true, "2", JiraIssueTypeDto("Task"),"03:00"))
+        addWorklog(workDay, WorkLogDto(3L, PRIVATE_TIME, true, "3", JiraIssueTypeDto("Task"),"04:00"))
+        addWorklog(workDay, WorkLogDto(4L, BREAK, true, "4", JiraIssueTypeDto("Break"), "05:00"))
+        addWorklog(workDay, WorkLogDto(5L, WORK_LOG, true, "5", JiraIssueTypeDto("Task"), "06:00"))
         workDay.stopTracking()
 
         //when

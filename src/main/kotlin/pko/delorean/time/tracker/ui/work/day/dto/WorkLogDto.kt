@@ -6,6 +6,7 @@ import java.net.URI
 data class WorkLogDto(
     val id: Long? = null,
     val type: WorkLogTypeDto? = WORK_LOG,
+    val extensible: Boolean,
     val jiraIssiueId: String,
     val jiraIssueType: JiraIssueTypeDto,
     val started: String? = null, //FIXME: This should be Instant but i can`t force bootstrap to send time with date
@@ -21,6 +22,7 @@ data class WorkLogDto(
             val capitalizedName = capitalize(breakType.name.toLowerCase().replace("_", " "))
             return WorkLogDto(
                 type = breakType,
+                extensible = false,
                 jiraIssiueId = capitalizedName,
                 jiraIssueType = JiraIssueTypeDto(breakType.name),
                 started = started,

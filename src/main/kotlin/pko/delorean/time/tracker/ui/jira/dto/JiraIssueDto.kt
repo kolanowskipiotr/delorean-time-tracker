@@ -7,6 +7,7 @@ data class JiraIssueDto(
     val jiraId: String,
     val jiraName: String,
     val type: JiraIssueTypeDto,
+    val extensible: Boolean,
     val comment: String? = null
 )
 

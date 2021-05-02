@@ -94,7 +94,7 @@ class JiraService {
             val searchClient = jiraClient.searchClient
             foundJiraIssues = searchByIssueKey(searchClient, userQuery)
                 .plus(searchClient.searchJql(jiraQuery).claim().issues)
-                .map { JiraIssueDto(it.key, it.summary,  it.issueType.toDto()) }
+                .map { JiraIssueDto(it.key, it.summary,  it.issueType.toDto(), true) }
             jiraClient.close()
         } catch (e: Exception) { //FIXME: Catch only important exceptions
             logger.error(e.message, e)

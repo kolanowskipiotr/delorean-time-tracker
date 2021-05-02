@@ -4,7 +4,10 @@
     <a href="<#if jiraUrl?has_content>${jiraUrl?html}/browse/${jiraIssiueId?html}</#if>" target="_blank">${jiraIssiueId?html}</a>
 </#macro>
 
-<#macro issueType jiraType  workLogType = "WORK_LOG">
+<#macro issueType jiraType, workLogType = "WORK_LOG", extensible = true>
+    <#if !extensible>
+        <@emojiWithAlt "📏" "Unextensible"/>
+    </#if>
     <#local workLogTypeDisplayName = workLogType!?html?replace("_", " ")?capitalize/>
     <#if workLogType == "WORK_LOG">
         <#if jiraType.iconUri??>

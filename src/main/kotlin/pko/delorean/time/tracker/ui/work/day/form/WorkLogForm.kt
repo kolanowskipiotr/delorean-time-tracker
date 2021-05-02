@@ -4,6 +4,7 @@ data class WorkLogForm(
     val workDayId: Long? = null,
     val workLogId: Long? = null,
     val type: WorkLogTypeForm? = null,
+    val extensible: Boolean? = null,
     val jiraIssueId: String? = null,
     val jiraIssueType: String? = null,
     val jiraIssueName: String? = null,

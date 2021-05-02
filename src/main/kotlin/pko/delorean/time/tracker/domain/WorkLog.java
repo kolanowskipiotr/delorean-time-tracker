@@ -54,8 +54,11 @@ public class WorkLog implements Serializable {
     private WorkDayStatus status;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type")
+    @Column(name = "type", nullable = false)
     private WorkLogType type;
+
+    @Column(name = "extensible", nullable = false)
+    private boolean extensible = true;
 
     @Embedded
     private JiraIssueType jiraIssueType;
@@ -70,6 +73,7 @@ public class WorkLog implements Serializable {
     public WorkLog(
             WorkDay workDay,
             WorkLogType type,
+            boolean extensible,
             Instant started,
             Instant ended,
             String jiraIssueId,
@@ -79,6 +83,7 @@ public class WorkLog implements Serializable {
             Instant endOfDay) {
         this.workDay = workDay;
         this.type = type;
+        this.extensible= extensible;
         if(type.isUnexportable()){
             status = UNEXPORTABLE;
         }
@@ -104,6 +109,18 @@ public class WorkLog implements Serializable {
 
     boolean isExportable() {
         return type.isExportable();
+    }
+
+    public boolean isExtensible() {
+        return extensible;
+    }
+
+    public void markUnextensible(){
+        this.extensible = false;
+    }
+
+    public void markExtensible(){
+        this.extensible = true;
     }
 
     public boolean isUnexportable(){

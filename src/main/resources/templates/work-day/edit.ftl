@@ -62,6 +62,7 @@
                 <div class="form-group mb-2">
                     <input type="hidden" class="form-control" id="workDayId" name="workDayId" value="${workDay.id?c}"/>
                     <input type="hidden" class="form-control" id="workLogId" name="workLogId" value="${(searchedWorkLogId?c)!}"/>
+                    <input type="hidden" class="form-control" id="extensible" name="extensible" value="${(searchedWorkLogExtensible!true)?c}"/>
                     <input type="text" class="form-control" id="jiraIssueId" name="jiraIssueId" placeholder="JIRA ID" value="${searchedJiraIssueId!?html}" required="required"/>
                     <input type="text" class="form-control" id="jiraIssueType" name="jiraIssueType" placeholder="JIRA Issue type" value="${searchedJiraIssueType!?html}" required="required"/>
                     <input type="text" class="form-control" id="jiraIssueName" name="jiraIssueName" placeholder="JIRA Issue summary" value="${searchedJiraIssueName!?html}"/>
@@ -81,6 +82,7 @@
                             <button type="submit" class="btn btn-primary">💾 Save</button>
                             <a class="ml-2 btn btn-primary" href="/work-day/work-log/start?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button">▶ Start new like this</a>
                             <a class="ml-2 btn btn-primary" href="/work-day/work-log/export/toggle?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button"><#if searchedWorkLogStatus == "EXPORTED">🔓 Enable export to JIRA<#else>🔒 Disable export to JIRA</#if></a>
+                            <a class="ml-2 btn btn-primary" href="/work-day/work-log/extensible/toggle?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button"><#if searchedWorkLogExtensible!true>📏 Make unextensible<#else>↔️ Make extensible</#if></a>
                             <a class="ml-2 btn btn-warning" href="/work-day/edit?workDayId=${workDay.id?c}" role="button">❌️ Cancel</a>
                         </div>
                     </div>
@@ -130,7 +132,7 @@
                                     </#if>
                                 </td>
                                 <td>
-                                    <@issueType workLog.jiraIssueType workLog.type/> ${workLog.jiraIssiueName!?html}
+                                    <@issueType workLog.jiraIssueType workLog.type workLog.extensible/> ${workLog.jiraIssiueName!?html}
                                     <blockquote class="blockquote">
                                         <#if workLog.jiraIssiueComment?has_content >
                                             <footer class="blockquote-footer float-right">${workLog.jiraIssiueComment!?html}</footer>
@@ -139,7 +141,7 @@
                                 </td>
                                 <td><@stateIcon workLog.status!?html/></td>
                                 <td>
-                                    <a class="btn btn-primary btn-sm" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueType=${workLog.jiraIssueType.name?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}" role="button">✏️ Edit</a>
+                                    <a class="btn btn-primary btn-sm" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueType=${workLog.jiraIssueType.name?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}&searchedWorkLogExtensible=${(workLog.extensible!true)?c}" role="button">✏️ Edit</a>
                                     <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "my-1 btn btn-danger btn-sm" "/work-day/work-log/delete" "🗑️ Delete" />
                                 </td>
                             </tr>
