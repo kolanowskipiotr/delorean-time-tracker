@@ -18,7 +18,7 @@
     <body>
 </#macro>
 
-<#macro action param1 value1 param2 value2 class='' href='' label='' >
+<#macro action param1 value1 param2 value2 class='' href='' label='' alt=''>
     <form action="${href}" method="post">
         <#if param1?has_content>
             <input type="hidden" class="form-control" id="${param1}" name="${param1}" value="${value1}">
@@ -26,6 +26,6 @@
         <#if param2?has_content>
             <input type="hidden" class="form-control" id="${param2}" name="${param2}" value="${value2}">
         </#if>
-        <button type="submit" class="${class}">${label}</button>
+        <button type="submit" class="${class}" title="${alt}">${label}</button>
     </form>
 </#macro>

@@ -82,7 +82,7 @@
                             <button type="submit" class="btn btn-primary">💾 Save</button>
                             <a class="ml-2 btn btn-primary" href="/work-day/work-log/start?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button">▶ Start new like this</a>
                             <a class="ml-2 btn btn-primary" href="/work-day/work-log/export/toggle?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button"><#if searchedWorkLogStatus == "EXPORTED">🔓 Enable export to JIRA<#else>🔒 Disable export to JIRA</#if></a>
-                            <a class="ml-2 btn btn-primary" href="/work-day/work-log/extensible/toggle?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button"><#if searchedWorkLogExtensible!true>📏 Make unextensible<#else>↔️ Make extensible</#if></a>
+                            <a class="ml-2 btn btn-primary" href="/work-day/work-log/extensible/toggle?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button"><#if searchedWorkLogExtensible!true>📏 Make unextensible<#else>💠 Make extensible</#if></a>
                             <a class="ml-2 btn btn-warning" href="/work-day/edit?workDayId=${workDay.id?c}" role="button">❌️ Cancel</a>
                         </div>
                     </div>
@@ -141,8 +141,10 @@
                                 </td>
                                 <td><@stateIcon workLog.status!?html/></td>
                                 <td>
-                                    <a class="btn btn-primary btn-sm" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueType=${workLog.jiraIssueType.name?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}&searchedWorkLogExtensible=${(workLog.extensible!true)?c}" role="button">✏️ Edit</a>
-                                    <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "my-1 btn btn-danger btn-sm" "/work-day/work-log/delete" "🗑️ Delete" />
+                                    <div class="btn-group" role="group" aria-label="Actions">
+                                        <a class="btn-primary btn-sm mr-1" href="/work-day/edit?workDayId=${workDay.id?c}&searchedWorkLogId=${workLog.id?c}&searchedJiraIssueId=${workLog.jiraIssiueId?url}&searchedJiraIssueType=${workLog.jiraIssueType.name?url}&searchedJiraIssueName=${workLog.jiraIssiueName?url}&searchedJiraIssueComment=${workLog.jiraIssiueComment!?url}&searchedWorkLogStart=${workLog.started!?url}&searchedWorkLogEnd=${workLog.ended!?url}&searchedWorkLogStatus=${workLog.status!?url}&searchedWorkLogExtensible=${(workLog.extensible!true)?c}" role="button" title="Edit">✏️</a>
+                                        <@action "workDayId" "${workDay.id?c}" "workLogId" "${workLog.id?c}" "btn btn-danger btn-sm" "/work-day/work-log/delete" "🗑️" "Delete"/>
+                                    </div>
                                 </td>
                             </tr>
                         </#list>
