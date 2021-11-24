@@ -1,5 +1,7 @@
 package pko.delorean.time.tracker.domain;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import pko.delorean.time.tracker.domain.dto.ExportableWorkLog;
 import pko.delorean.time.tracker.domain.statistics.IssueStatistics;
 import pko.delorean.time.tracker.domain.statistics.ProjectStatistics;
@@ -13,9 +15,11 @@ import pko.delorean.time.tracker.ui.work.day.dto.WorkLogTypeDto;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -28,6 +32,7 @@ import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static pko.delorean.time.tracker.domain.WorkDayStatus.*;
+import static pko.delorean.time.tracker.domain.WorkLogType.PRIVATE_TIME;
 
 /**
  * A WorkDay.
@@ -72,7 +77,7 @@ public class WorkDay implements Serializable {
     }
 
     public Set<ExportableWorkLog> calculteUnexportedWorkLogs() {
-        addBreaksToWorLogs();
+        addBreaksToWorkLogs();
 
         return getExportableWorkLogsStream()
                 .map(workLog -> new ExportableWorkLog(
@@ -98,9 +103,9 @@ public class WorkDay implements Serializable {
                 .collect(toList());
 
         IssueStatistics privateTimeStatistics = new IssueStatistics(
-                WorkLogType.PRIVATE_TIME.name(),
+                PRIVATE_TIME.name(),
                 workLogs.stream()
-                        .filter(wl -> wl.getType() == WorkLogType.PRIVATE_TIME)
+                        .filter(wl -> wl.getType() == PRIVATE_TIME)
                         .collect(toList()),
                 this.createDate);
         return new WorkDayStatistics(
@@ -110,12 +115,28 @@ public class WorkDay implements Serializable {
     }
 
     public List<IssueSummary> getSummary() {
-        return this.workLogs.stream()
+        return this.getWorkLogs().stream()
                 .collect(groupingBy(WorkLog::getJiraId))
                 .entrySet().stream()
                 .map(it -> new IssueSummary(it.getKey(), it.getValue()))
-                .sorted(comparing(IssueSummary::getOrdering))
+                .sorted(comparing(this::workLogTypeOrder)
+                        .thenComparing(IssueSummary::getStarted)
+                        .reversed())
                 .collect(toList());
+    }
+
+    private Integer workLogTypeOrder(IssueSummary issueSummary) {
+        switch (issueSummary.getWorkLogType()) {
+            case PRIVATE_TIME:
+                return 1;
+            case BREAK:
+                return 2;
+            case WORK_ORGANIZATION:
+                return 3;
+            case WORK_LOG:
+                return 4;
+        }
+        return 4;
     }
 
     public WorkDayStatus getStatus() {
@@ -255,7 +276,7 @@ public class WorkDay implements Serializable {
 
     private Stream<WorkLog> workLogsWithoutPrivateTimeStream() {
         return this.workLogs.stream()
-                .filter(wl -> wl.getType() != WorkLogType.PRIVATE_TIME);
+                .filter(wl -> wl.getType() != PRIVATE_TIME);
     }
 
     private void endWorklogs(Instant ended) {
@@ -319,7 +340,9 @@ public class WorkDay implements Serializable {
                 .collect(toSet());
     }
 
-    private void addBreaksToWorLogs() {
+    private void addBreaksToWorkLogs() {
+        Instant defaultEnd = Utils.Companion.buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES));
+
         long breaksDuration = getExportableWorkLogsStream()
                 .filter(WorkLog::isDividable)
                 .peek(WorkLog::markExported)//☢️
@@ -330,10 +353,51 @@ public class WorkDay implements Serializable {
                 .filter(WorkLog::isUndividable)
                 .filter(WorkLog::isExtensible)
                 .collect(toList());
+        workLogsToAddBreaks.sort(comparing(WorkLog::getStarted).reversed());
 
-        Queue<Long> breaksForIssues = calculateBreaks(breaksDuration, workLogsToAddBreaks.size());
-        workLogsToAddBreaks.forEach(
-                workLog -> workLog.addBreak(breaksForIssues.poll()));
+        long sumOfAllWorkLogDuration = workLogsToAddBreaks.stream()
+                .map(workLog -> workLog.getDuration(defaultEnd))
+                .reduce(0L, Long::sum);
+        List<ImmutablePair<WorkLog, Long>> workLogsWithBreaks = workLogsToAddBreaks.stream()
+                .map(workLog -> ImmutablePair.of(
+                        workLog,
+                        Math.round(breaksDuration * workLog.getDuration(defaultEnd) / (double) sumOfAllWorkLogDuration)))
+                .sorted(Comparator.comparingLong(ImmutablePair::getValue))
+                .collect(toList());
+
+        long breaksSumCheck = workLogsWithBreaks.stream()
+                .map(Pair::getValue)
+                .mapToLong(Long::valueOf)
+                .reduce(0L, Long::sum);
+
+        if(breaksSumCheck > breaksDuration){
+            workLogsWithBreaks = applyCorrection(
+                    workLogsWithBreaks,
+                    breaksSumCheck - breaksDuration,
+                    breakDuration -> breakDuration - 1);
+
+        } else if (breaksSumCheck < breaksDuration){
+            workLogsWithBreaks = applyCorrection(
+                    workLogsWithBreaks,
+                    breaksDuration - breaksSumCheck,
+                    breakDuration -> breakDuration + 1);
+        }
+
+        workLogsWithBreaks.forEach(pair -> pair.getKey().addBreak(pair.getValue()));
+    }
+
+    private  List<ImmutablePair<WorkLog, Long>> applyCorrection(List<ImmutablePair<WorkLog, Long>> workLogsWithBreaks, Long durationToCorrect, Function<Long, Long> corrector){
+        final long[] durationToCorrectWrapped = {durationToCorrect};
+        return workLogsWithBreaks.stream()
+                .map(pair -> {
+                    ImmutablePair<WorkLog, Long> pairAfterCorrection = pair;
+                    if(durationToCorrectWrapped[0] > 0 && pair.getValue() > 0){
+                        durationToCorrectWrapped[0] = durationToCorrectWrapped[0] - 1;
+                        pairAfterCorrection = ImmutablePair.of(pair.getKey(), corrector.apply(pair.getValue()));
+                    }
+                    return pairAfterCorrection;
+                })
+                .collect(Collectors.toList());
     }
 
     private Queue<Long> calculateBreaks(long breaksDuration, int numberOfWorkLogsToExport) {

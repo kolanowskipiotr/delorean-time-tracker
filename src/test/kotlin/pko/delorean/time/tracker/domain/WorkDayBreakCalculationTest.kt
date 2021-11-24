@@ -14,13 +14,12 @@ import java.time.format.DateTimeFormatter
 internal class WorkDayBreakCalculationTest {
 
     @Test
-    fun `should divise break on work logs evenly`() {
+    fun `should divide break on work logs proportionally`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(2L, BREAK, true, "2", JiraIssueTypeDto("Break"), "04:00"))
-        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, true, "3", JiraIssueTypeDto("Task"), "06:00"))
-        workDay.stopTracking()
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00", "04:00"))
+        addWorklog(workDay, WorkLogDto(2L, BREAK, true, "2", JiraIssueTypeDto("Break"), "04:00", "06:00"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, true, "3", JiraIssueTypeDto("Task"), "06:00", "07:00"))
 
         //when
         val workLogsToExport = workDay.calculteUnexportedWorkLogs()
@@ -31,30 +30,30 @@ internal class WorkDayBreakCalculationTest {
         val worklogsToAssert = workLogsToExport.sortedBy { it.worklog.started }.toList()
 
         val workLog1 = workDay.workLogById(1L)
-        assertThat(workLog1.`break`).isEqualTo(60)
+        assertThat(workLog1.`break`).isEqualTo(80)
         assertThat(worklogsToAssert[0].worklog.jiraId).isEqualTo("1")
-        assertThat(worklogsToAssert[0].breakDurationInMinutes).isEqualTo(60)
-        assertThat(worklogsToAssert[0].comment).contains(" + czas organizacyjny 60m")
+        assertThat(worklogsToAssert[0].breakDurationInMinutes).isEqualTo(80)
+        assertThat(worklogsToAssert[0].comment).contains(" + czas organizacyjny 80m")
 
         val breakTime = workDay.workLogById(2L)
         assertThat(breakTime.isExported).isTrue()
         assertThat(breakTime.`break`).isEqualTo(0)
 
-        val workLog2 = workDay.workLogById(1L)
-        assertThat(workLog2.`break`).isEqualTo(60)
+        val workLog2 = workDay.workLogById(3L)
+        assertThat(workLog2.`break`).isEqualTo(40)
         assertThat(worklogsToAssert[1].worklog.jiraId).isEqualTo("3")
-        assertThat(worklogsToAssert[1].breakDurationInMinutes).isEqualTo(60)
-        assertThat(worklogsToAssert[1].comment).contains(" + czas organizacyjny 60m")
+        assertThat(worklogsToAssert[1].breakDurationInMinutes).isEqualTo(40)
+        assertThat(worklogsToAssert[1].comment).contains(" + czas organizacyjny 40m")
     }
 
     @Test
-    fun `should divise break on work logs evenly as possible`() {
+    fun `should divide break on work logs evenly as possible`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, true, "2", JiraIssueTypeDto("Task"),"03:00"))
-        addWorklog(workDay, WorkLogDto(3L, BREAK, true, "3", JiraIssueTypeDto("Break"), "04:00"))
-        addWorklog(workDay, WorkLogDto(4L, WORK_LOG, true, "4", JiraIssueTypeDto("Task"), "04:32"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00", "03:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_LOG, true, "2", JiraIssueTypeDto("Task"),"03:00", "04:00"))
+        addWorklog(workDay, WorkLogDto(3L, BREAK, true, "3", JiraIssueTypeDto("Break"), "04:00", "04:32"))
+        addWorklog(workDay, WorkLogDto(4L, WORK_LOG, true, "4", JiraIssueTypeDto("Task"), "04:32", "05:32"))
         workDay.stopTracking()
 
         //when
@@ -92,11 +91,10 @@ internal class WorkDayBreakCalculationTest {
     fun `should add breaks only to some worklogs when break is to short`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "2", JiraIssueTypeDto("Task"),"03:00"))
-        addWorklog(workDay, WorkLogDto(2L, BREAK, true, "3", JiraIssueTypeDto("Break"), "04:00"))
-        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, true, "4", JiraIssueTypeDto("Task"), "04:02"))
-        workDay.stopTracking()
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00", "03:00"))
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "2", JiraIssueTypeDto("Task"),"03:00", "04:00"))
+        addWorklog(workDay, WorkLogDto(2L, BREAK, true, "3", JiraIssueTypeDto("Break"), "04:00", "04:02"))
+        addWorklog(workDay, WorkLogDto(3L, WORK_LOG, true, "4", JiraIssueTypeDto("Task"), "04:02", "05:02"))
 
         //when
         val workLogsToExport = workDay.calculteUnexportedWorkLogs()
@@ -220,12 +218,11 @@ internal class WorkDayBreakCalculationTest {
     fun `should skip private work logs`() {
         //given
         val workDay = WorkDay(LocalDate.of(2021, 11,23))
-        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00"))
-        addWorklog(workDay, WorkLogDto(2L, WORK_ORGANIZATION, true, "2", JiraIssueTypeDto("Task"),"03:00"))
-        addWorklog(workDay, WorkLogDto(3L, PRIVATE_TIME, true, "3", JiraIssueTypeDto("Task"),"04:00"))
-        addWorklog(workDay, WorkLogDto(4L, BREAK, true, "4", JiraIssueTypeDto("Break"), "05:00"))
-        addWorklog(workDay, WorkLogDto(5L, WORK_LOG, true, "5", JiraIssueTypeDto("Task"), "06:00"))
-        workDay.stopTracking()
+        addWorklog(workDay, WorkLogDto(1L, WORK_LOG, true, "1", JiraIssueTypeDto("Task"),"02:00", "03:00"))
+        addWorklog(workDay, WorkLogDto(2L, WORK_ORGANIZATION, true, "2", JiraIssueTypeDto("Task"),"03:00", "04:00"))
+        addWorklog(workDay, WorkLogDto(3L, PRIVATE_TIME, true, "3", JiraIssueTypeDto("Task"),"04:00", "05:00"))
+        addWorklog(workDay, WorkLogDto(4L, BREAK, true, "4", JiraIssueTypeDto("Break"), "05:00", "06:00"))
+        addWorklog(workDay, WorkLogDto(5L, WORK_LOG, true, "5", JiraIssueTypeDto("Task"), "06:00", "07:00"))
 
         //when
         val workLogsToExport = workDay.calculteUnexportedWorkLogs()
@@ -271,13 +268,4 @@ internal class WorkDayBreakCalculationTest {
     private fun WorkDay.workLogById(id: Long) =
         this.workLogs.first { it.id == id }
 
-    var TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm")
-        .withZone(ZoneId.systemDefault())
-
-    private fun timeString(instatnt: Instant?): String? {
-        if(instatnt != null) {
-            return TIME_FORMATTER.format(instatnt)
-        }
-        return StringUtils.EMPTY
-    }
 }

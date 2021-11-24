@@ -25,8 +25,8 @@ Find delorean process and kill it.
 1. copy `run.zsh` to deploy place
 1. copy `run.bat` to deploy place
 1. copy `run-first-time.bat` to deploy place
-1. copy `src\main\resources\application.properties` to deploy place
 1. copy `README.md` to deploy place
+1. copy `src\main\resources\application.properties` to deploy place
 1. change `{VERSION}` in `run.bat`, `run-first-time.bat`, `run.zsh` files
 
 ## Persistence
