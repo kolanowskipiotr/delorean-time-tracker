@@ -80,7 +80,7 @@
                     <div class="form-inline">
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary">💾 Save</button>
-                            <a class="ml-2 btn btn-primary" href="/work-day/work-log/start?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button">▶ Start new like this</a>
+                            <a id="startNewWorkLog" class="ml-2 btn btn-primary" href="" onclick="document.getElementById('startNewWorkLog').href=('/work-day/work-log/start?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}&jiraIssueComment=' + encodeURIComponent(document.getElementById('jiraIssueComment').value))" role="button">▶ Start new like this</a>
                             <a class="ml-2 btn btn-primary" href="/work-day/work-log/export/toggle?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button"><#if searchedWorkLogStatus == "EXPORTED">🔓 Enable export to JIRA<#else>🔒 Disable export to JIRA</#if></a>
                             <a class="ml-2 btn btn-primary" href="/work-day/work-log/extensible/toggle?workDayId=${workDay.id?c}&workLogId=${searchedWorkLogId?c}" role="button"><#if searchedWorkLogExtensible!true>📏 Make unextensible<#else>💠 Make extensible</#if></a>
                             <a class="ml-2 btn btn-warning" href="/work-day/edit?workDayId=${workDay.id?c}" role="button">❌️ Cancel</a>

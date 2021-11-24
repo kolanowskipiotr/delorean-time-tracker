@@ -28,6 +28,7 @@ import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.*;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -206,7 +207,7 @@ public class WorkDay implements Serializable {
                 .ifPresent(WorkLog::contiune);
     }
 
-    public void startTracking(long workLogId) {
+    public void startTracking(long workLogId, String comment) {
         Instant now = Utils.Companion.buildDateTimeInstant(this.createDate, now().truncatedTo(MINUTES));
         List<WorkLog> workLogsToCopy = this.workLogs.stream()
                 .filter(workLog -> workLog.getId().equals(workLogId))
@@ -223,7 +224,7 @@ public class WorkDay implements Serializable {
                         null,
                         it.getBreak(),
                         it.getJiraName(),
-                        it.getComment(),
+                        ofNullable(comment).orElseGet(it::getComment),
                         null)));
     }
 

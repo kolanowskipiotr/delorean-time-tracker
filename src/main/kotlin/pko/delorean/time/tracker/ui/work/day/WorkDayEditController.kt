@@ -136,9 +136,10 @@ class WorkDayEditController(
     @GetMapping("/work-log/start")//FIXME: This should be Patch
     fun startWorkLog(
         @RequestParam(name = WORK_DAY_ID_PARAM) workDayId: Long,
-        @RequestParam(name = "workLogId") workLogId: Long
+        @RequestParam(name = "workLogId") workLogId: Long,
+        @RequestParam(name = "jiraIssueComment") jiraIssueComment: String?
     ): String {
-        workDayService.startWorkLog(workDayId, workLogId)
+        workDayService.startWorkLog(workDayId, workLogId, jiraIssueComment)
         return  "redirect:${editUrl(workDayId)}"
     }
 

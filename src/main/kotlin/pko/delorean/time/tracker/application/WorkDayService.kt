@@ -117,9 +117,9 @@ class WorkDayService @Autowired constructor(
     }
 
     @Transactional
-    fun startWorkLog(workDayId: Long, workLogId: Long) {
+    fun startWorkLog(workDayId: Long, workLogId: Long, comment: String? ) {
         val workDay = workDayJpaRepository.getOne(workDayId)
-        workDay.startTracking(workLogId)
+        workDay.startTracking(workLogId, comment)
         workDayJpaRepository.saveAndFlush(workDay)
     }
 
